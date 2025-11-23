@@ -69,79 +69,115 @@ A comprehensive, modular financing application similar to Refrens, built with No
 - Docker and Docker Compose
 - npm or yarn
 
-## Installation
+## Quick Start (5 minutes)
 
-### 1. Clone the repository
+### Option 1: Docker (Recommended)
 
 ```bash
+# 1. Clone the repository
 git clone https://github.com/Hstar1994/Finan.git
 cd Finan
+
+# 2. Start everything with Docker
+docker-compose up -d
+
+# 3. Run migrations and seed data
+docker-compose exec backend npm run db:migrate
+docker-compose exec backend npm run db:seed
+
+# 4. Open your browser
+# Backend API: http://localhost:3000
+# Frontend: http://localhost:8080
+# API Docs: http://localhost:3000/api-docs
 ```
 
-### 2. Install dependencies
+**Default Login Credentials:**
+- Admin: `admin@finan.com` / `admin123`
+- Manager: `manager@finan.com` / `manager123`
+- User: `user@finan.com` / `user123`
+
+### Option 2: Local Development
 
 ```bash
+# 1. Clone and install
+git clone https://github.com/Hstar1994/Finan.git
+cd Finan
 npm install
-```
 
-### 3. Configure environment variables
+# 2. Start PostgreSQL with Docker
+docker-compose up -d postgres
 
-```bash
+# 3. Setup environment
 cp .env.example .env
+# Edit .env if needed
+
+# 4. Setup database
+npm run db:migrate
+npm run db:seed
+
+# 5. Start backend
+npm run dev
+
+# 6. Start frontend (in another terminal)
+cd frontend
+npm start
 ```
 
-Edit `.env` file with your configuration:
+## Detailed Installation
+
+### Prerequisites
+- Docker Desktop (for containerized setup)
+- OR Node.js v14+ and PostgreSQL (for local setup)
+
+### Environment Configuration
+
+The `.env` file is created automatically, but you can customize:
 
 ```env
 NODE_ENV=development
 PORT=3000
 
+# Database (use 'postgres' as host when running in Docker)
 DB_HOST=localhost
 DB_PORT=5432
 DB_NAME=finan_db
 DB_USER=finan
 DB_PASSWORD=finan123
 
+# JWT (change in production!)
 JWT_SECRET=your-secret-key-change-in-production
 JWT_EXPIRES_IN=24h
+
+# Rate Limiting
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
 ```
 
-### 4. Start the database
+### Available Scripts
 
 ```bash
-docker-compose up -d
+# Backend
+npm start              # Start production server
+npm run dev           # Start development server with auto-reload
+npm run db:migrate    # Run database migrations
+npm run db:seed       # Seed demo data
+
+# Docker
+docker-compose up -d              # Start all services
+docker-compose down               # Stop all services
+docker-compose logs -f backend    # View backend logs
+docker-compose logs -f postgres   # View database logs
+docker-compose exec backend bash  # Access backend container shell
 ```
 
-This will start a PostgreSQL database with persistent storage.
+## Accessing the Application
 
-### 5. Run database migrations
+Once running, you can access:
 
-```bash
-npm run db:migrate
-```
-
-### 6. Seed default users (optional)
-
-```bash
-npm run db:seed
-```
-
-This creates three default users:
-- Admin: `admin@finan.com` / `admin123`
-- Manager: `manager@finan.com` / `manager123`
-- User: `user@finan.com` / `user123`
-
-### 7. Start the application
-
-```bash
-# Development mode with auto-reload
-npm run dev
-
-# Production mode
-npm start
-```
-
-The server will start at `http://localhost:3000`
+- **Frontend**: http://localhost:8080 (Login and dashboard)
+- **Backend API**: http://localhost:3000
+- **API Documentation**: http://localhost:3000/api-docs
+- **Health Check**: http://localhost:3000/api/health
 
 ## API Documentation
 

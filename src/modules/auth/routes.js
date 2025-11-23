@@ -134,4 +134,46 @@ router.put('/profile', authenticate, auditLogger('UPDATE', 'User'), controller.u
  */
 router.post('/change-password', authenticate, auditLogger('UPDATE', 'User'), controller.changePassword);
 
+/**
+ * @swagger
+ * /api/auth/reset-password:
+ *   post:
+ *     summary: Reset user password (Admin only)
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - newPassword
+ *             properties:
+ *               userId:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Password reset successfully
+ */
+router.post('/reset-password', authenticate, authorize('admin'), controller.resetUserPassword);
+
+/**
+ * @swagger
+ * /api/auth/refresh:
+ *   post:
+ *     summary: Refresh authentication token
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Token refreshed successfully
+ */
+router.post('/refresh', authenticate, controller.refreshToken);
+
 module.exports = router;

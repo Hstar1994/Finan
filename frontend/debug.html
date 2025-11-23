@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Finan</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #00ff00;
+        }
+        .log {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #00ff00;
+        }
+        .error { color: #ff0000; border-color: #ff0000; }
+        .success { color: #00ff00; border-color: #00ff00; }
+        .info { color: #00bfff; border-color: #00bfff; }
+        button {
+            padding: 10px 20px;
+            margin: 10px 5px;
+            cursor: pointer;
+        }
+        pre {
+            background: #2d2d2d;
+            padding: 10px;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug Dashboard</h1>
+    <div>
+        <button onclick="checkStorage()">Check Storage</button>
+        <button onclick="clearAll()">Clear All</button>
+        <button onclick="testLogin()">Test Login</button>
+        <button onclick="window.location.href='index.html'">Go to Login</button>
+    </div>
+    
+    <div id="output"></div>
+    
+    <script>
+        const output = document.getElementById('output');
+        
+        function log(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            output.appendChild(div);
+        }
+        
+        function checkStorage() {
+            output.innerHTML = '';
+            log('=== Checking Storage ===', 'info');
+            
+            // Test if localStorage is available
+            log('Testing localStorage availability...', 'info');
+            try {
+                const testKey = 'test_' + Date.now();
+                localStorage.setItem(testKey, 'test_value');
+                const testValue = localStorage.getItem(testKey);
+                localStorage.removeItem(testKey);
+                
+                if (testValue === 'test_value') {
+                    log('✓ localStorage is WORKING', 'success');
+                } else {
+                    log('✗ localStorage SET worked but GET failed', 'error');
+                }
+            } catch (e) {
+                log(`✗ localStorage is BLOCKED: ${e.message}`, 'error');
+                log(`Error type: ${e.name}`, 'error');
+            }
+            
+            // Check localStorage
+            log('\nLocalStorage:', 'info');
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            if (token) {
+                log(`✓ Token exists: ${token.substring(0, 50)}...`, 'success');
+            } else {
+                log('✗ No token found', 'error');
+            }
+            
+            if (user) {
+                try {
+                    const userData = JSON.parse(user);
+                    log(`✓ User data: ${JSON.stringify(userData, null, 2)}`, 'success');
+                } catch (e) {
+                    log(`✗ Invalid user data: ${e.message}`, 'error');
+                }
+            } else {
+                log('✗ No user data found', 'error');
+            }
+            
+            // Check sessionStorage
+            log('\nSessionStorage:', 'info');
+            const sessionToken = sessionStorage.getItem('token');
+            const sessionUser = sessionStorage.getItem('user');
+            const justLoggedIn = sessionStorage.getItem('justLoggedIn');
+            
+            if (sessionToken) {
+                log(`✓ Token in sessionStorage: ${sessionToken.substring(0, 50)}...`, 'success');
+            } else {
+                log('✗ No token in sessionStorage', 'info');
+            }
+            
+            if (sessionUser) {
+                log(`✓ User in sessionStorage`, 'success');
+            } else {
+                log('✗ No user in sessionStorage', 'info');
+            }
+            
+            if (justLoggedIn) {
+                log(`✓ justLoggedIn flag: ${justLoggedIn}`, 'success');
+            } else {
+                log('✗ No justLoggedIn flag', 'info');
+            }
+            
+            // List all storage
+            log('\nAll localStorage keys:', 'info');
+            if (localStorage.length === 0) {
+                log('  (empty)', 'info');
+            }
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                log(`  ${key}`, 'info');
+            }
+            
+            log('\nAll sessionStorage keys:', 'info');
+            if (sessionStorage.length === 0) {
+                log('  (empty)', 'info');
+            }
+            for (let i = 0; i < sessionStorage.length; i++) {
+                const key = sessionStorage.key(i);
+                log(`  ${key}`, 'info');
+            }
+        }
+        
+        function clearAll() {
+            localStorage.clear();
+            sessionStorage.clear();
+            log('✓ All storage cleared', 'success');
+            checkStorage();
+        }
+        
+        async function testLogin() {
+            output.innerHTML = '';
+            log('=== Testing Login ===', 'info');
+            
+            try {
+                log('Sending login request...', 'info');
+                const response = await fetch('http://localhost:3000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@finan.com',
+                        password: 'admin123'
+                    }),
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log('✓ Login successful', 'success');
+                    log(`Token: ${data.token.substring(0, 50)}...`, 'success');
+                    
+                    // Get profile
+                    log('Fetching profile...', 'info');
+                    const profileResponse = await fetch('http://localhost:3000/api/auth/profile', {
+                        headers: {
+                            'Authorization': `Bearer ${data.token}`,
+                        },
+                    });
+                    
+                    if (profileResponse.ok) {
+                        const userData = await profileResponse.json();
+                        log('✓ Profile fetched', 'success');
+                        log(`User: ${JSON.stringify(userData, null, 2)}`, 'success');
+                        
+                        // Save to storage
+                        log('Saving to storage...', 'info');
+                        try {
+                            // Try localStorage
+                            log('Attempting localStorage...', 'info');
+                            localStorage.setItem('token', data.token);
+                            log('✓ Token saved to localStorage', 'success');
+                            
+                            localStorage.setItem('user', JSON.stringify(userData));
+                            log('✓ User saved to localStorage', 'success');
+                        } catch (e) {
+                            log(`✗ localStorage failed: ${e.message}`, 'error');
+                            log('Trying sessionStorage instead...', 'info');
+                        }
+                        
+                        // Always try sessionStorage as backup
+                        try {
+                            sessionStorage.setItem('token', data.token);
+                            log('✓ Token saved to sessionStorage', 'success');
+                            
+                            sessionStorage.setItem('user', JSON.stringify(userData));
+                            log('✓ User saved to sessionStorage', 'success');
+                            
+                            sessionStorage.setItem('justLoggedIn', 'true');
+                            log('✓ justLoggedIn flag saved', 'success');
+                        } catch (e) {
+                            log(`✗ sessionStorage failed: ${e.message}`, 'error');
+                        }
+                        
+                        log('✓ Save complete', 'success');
+                        
+                        setTimeout(() => {
+                            log('Checking if data was saved...', 'info');
+                            checkStorage();
+                            
+                            log('\n=== Ready to redirect ===', 'success');
+                            log('Click "Go to Dashboard" button to test', 'info');
+                            
+                            const btn = document.createElement('button');
+                            btn.textContent = 'Go to Dashboard';
+                            btn.onclick = () => window.location.replace('dashboard.html');
+                            btn.style.fontSize = '20px';
+                            btn.style.padding = '15px 30px';
+                            btn.style.background = '#00ff00';
+                            btn.style.border = 'none';
+                            btn.style.cursor = 'pointer';
+                            output.appendChild(btn);
+                        }, 100);
+                    } else {
+                        log('✗ Failed to fetch profile', 'error');
+                    }
+                } else {
+                    log(`✗ Login failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                log(`✗ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Auto-check on load
+        checkStorage();
+    </script>
+</body>
+</html>

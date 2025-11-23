@@ -3,6 +3,7 @@ const router = express.Router();
 
 // Import module routes
 const authRoutes = require('../modules/auth/routes');
+const userRoutes = require('../modules/users/routes');
 const customerRoutes = require('../modules/customers/routes');
 const itemRoutes = require('../modules/items/routes');
 const invoiceRoutes = require('../modules/invoices/routes');
@@ -18,6 +19,7 @@ router.get('/health', (req, res) => {
 
 // Register routes
 router.use('/auth', authRoutes);
+router.use('/users', userRoutes);
 router.use('/customers', customerRoutes);
 router.use('/items', itemRoutes);
 router.use('/invoices', invoiceRoutes);

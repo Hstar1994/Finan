@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finan - Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="dashboard">
+        <nav class="navbar">
+            <div class="navbar-brand">
+                <button class="hamburger" id="hamburgerBtn" onclick="toggleSidebar()">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <h1>💰 Finan</h1>
+            </div>
+            <div class="navbar-menu">
+                <a href="profile.html" style="color: white; text-decoration: none; margin-right: 20px;">
+                    <span id="userInfo" class="user-info"></span>
+                </a>
+                <button id="logoutBtn" class="btn-logout">Logout</button>
+            </div>
+        </nav>
+        
+        <div class="dashboard-container">
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-menu">
+                    <a href="#" class="menu-item active">
+                        <span class="icon">📊</span>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="users.html" class="menu-item" id="usersLink" style="display: none;">
+                        <span class="icon">🔑</span>
+                        <span>Users</span>
+                    </a>
+                    <a href="#" class="menu-item">
+                        <span class="icon">👥</span>
+                        <span>Customers</span>
+                    </a>
+                    <a href="#" class="menu-item">
+                        <span class="icon">🏷️</span>
+                        <span>Items</span>
+                    </a>
+                    <a href="#" class="menu-item">
+                        <span class="icon">📄</span>
+                        <span>Invoices</span>
+                    </a>
+                    <a href="#" class="menu-item">
+                        <span class="icon">📋</span>
+                        <span>Quotes</span>
+                    </a>
+                    <a href="#" class="menu-item">
+                        <span class="icon">💰</span>
+                        <span>Receipts</span>
+                    </a>
+                    <a href="#" class="menu-item">
+                        <span class="icon">🔄</span>
+                        <span>Credit Notes</span>
+                    </a>
+                    <a href="#" class="menu-item">
+                        <span class="icon">📝</span>
+                        <span>Audit Logs</span>
+                    </a>
+                </div>
+            </aside>
+            
+            <main class="main-content">
+                <div class="content-header">
+                    <h2>Welcome to Finan Dashboard</h2>
+                    <p>Manage your finances efficiently</p>
+                </div>
+                
+                <div class="user-status-card">
+                    <h3>👤 Your Account Status</h3>
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <label>User ID:</label>
+                            <span id="userId"></span>
+                        </div>
+                        <div class="status-item">
+                            <label>Full Name:</label>
+                            <span id="userName"></span>
+                        </div>
+                        <div class="status-item">
+                            <label>Email:</label>
+                            <span id="userEmail"></span>
+                        </div>
+                        <div class="status-item">
+                            <label>Role:</label>
+                            <span id="userRole" class="role-badge"></span>
+                        </div>
+                        <div class="status-item">
+                            <label>Account Status:</label>
+                            <span id="userStatus" class="status-badge"></span>
+                        </div>
+                        <div class="status-item">
+                            <label>Login Time:</label>
+                            <span id="loginTime"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="permissions-section">
+                        <h4>🔐 Your Permissions</h4>
+                        <div id="permissionsGrid" class="permissions-grid"></div>
+                    </div>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-content">
+                            <h4>Customers</h4>
+                            <p class="stat-value">-</p>
+                            <p class="stat-label">Total Customers</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">📄</div>
+                        <div class="stat-content">
+                            <h4>Invoices</h4>
+                            <p class="stat-value">-</p>
+                            <p class="stat-label">Total Invoices</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">📋</div>
+                        <div class="stat-content">
+                            <h4>Quotes</h4>
+                            <p class="stat-value">-</p>
+                            <p class="stat-label">Total Quotes</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-content">
+                            <h4>Receipts</h4>
+                            <p class="stat-value">-</p>
+                            <p class="stat-label">Total Receipts</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="info-card">
+                    <h3>ℹ️ Getting Started</h3>
+                    <ul>
+                        <li><strong>API Documentation:</strong> Visit <a href="http://localhost:3000/api-docs" target="_blank">Swagger UI</a> to explore all API endpoints</li>
+                        <li><strong>Backend:</strong> Running at <a href="http://localhost:3000" target="_blank">http://localhost:3000</a></li>
+                        <li><strong>Role-Based Access:</strong> Your role determines what actions you can perform</li>
+                        <li><strong>Audit Logging:</strong> All your actions are logged for security and compliance</li>
+                    </ul>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script src="dashboard.js"></script>
+</body>
+</html>

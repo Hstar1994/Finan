@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Users API</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        button { padding: 10px 20px; margin: 10px 0; cursor: pointer; }
+        pre { background: #f4f4f4; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>Test Users API</h1>
+    
+    <div>
+        <h3>Authentication Status:</h3>
+        <p>Token: <span id="tokenStatus"></span></p>
+        <p>User: <span id="userStatus"></span></p>
+        <p>Role: <span id="roleStatus"></span></p>
+    </div>
+    
+    <button onclick="testUsersAPI()">Test GET /api/users</button>
+    <button onclick="window.location.href='users.html'">Go to Users Page</button>
+    <button onclick="window.location.href='dashboard.html'">Go to Dashboard</button>
+    
+    <div id="result"></div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        
+        // Check auth
+        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || sessionStorage.getItem('user') || '{}');
+        
+        document.getElementById('tokenStatus').textContent = token ? 'Present ✓' : 'Missing ✗';
+        document.getElementById('tokenStatus').className = token ? 'success' : 'error';
+        
+        document.getElementById('userStatus').textContent = user.email || 'Not logged in';
+        document.getElementById('userStatus').className = user.email ? 'success' : 'error';
+        
+        document.getElementById('roleStatus').textContent = user.role || 'N/A';
+        document.getElementById('roleStatus').className = user.role === 'admin' ? 'success' : (user.role ? '' : 'error');
+        
+        async function testUsersAPI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>Loading...</p>';
+            
+            try {
+                const response = await fetch(`${API_URL}/users?page=1&limit=10`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <h3 class="success">✓ API Response (Status: ${response.status})</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <h3 class="error">✗ API Error (Status: ${response.status})</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3 class="error">✗ Network Error</h3>
+                    <pre>${error.message}</pre>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

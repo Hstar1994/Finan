@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #fff;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            cursor: pointer;
+        }
+        pre {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 5px;
+            overflow: auto;
+        }
+        .section {
+            margin: 20px 0;
+            border: 1px solid #444;
+            padding: 15px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>API Response Test</h1>
+    
+    <div class="section">
+        <h2>Step 1: Login</h2>
+        <button onclick="testLogin()">Login as Admin</button>
+        <pre id="loginResponse"></pre>
+    </div>
+    
+    <div class="section">
+        <h2>Step 2: Get Profile</h2>
+        <button onclick="testProfile()">Get Profile</button>
+        <pre id="profileResponse"></pre>
+    </div>
+    
+    <div class="section">
+        <h2>Step 3: Check Storage</h2>
+        <button onclick="checkStorage()">Check Storage</button>
+        <pre id="storageData"></pre>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        let testToken = null;
+
+        async function testLogin() {
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@example.com',
+                        password: 'admin123'
+                    })
+                });
+                
+                const data = await response.json();
+                testToken = data.token;
+                
+                document.getElementById('loginResponse').textContent = 
+                    'STATUS: ' + response.status + '\n\n' +
+                    'RESPONSE:\n' + JSON.stringify(data, null, 2);
+                
+                console.log('Login response:', data);
+            } catch (error) {
+                document.getElementById('loginResponse').textContent = 
+                    'ERROR: ' + error.message;
+            }
+        }
+
+        async function testProfile() {
+            if (!testToken) {
+                alert('Login first!');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/auth/profile`, {
+                    headers: { 'Authorization': `Bearer ${testToken}` }
+                });
+                
+                const data = await response.json();
+                
+                document.getElementById('profileResponse').textContent = 
+                    'STATUS: ' + response.status + '\n\n' +
+                    'RAW RESPONSE:\n' + JSON.stringify(data, null, 2) + '\n\n' +
+                    'DATA STRUCTURE:\n' +
+                    '- Has "user" property: ' + ('user' in data) + '\n' +
+                    '- Has "id" property: ' + ('id' in data) + '\n';
+                
+                if (data.user) {
+                    document.getElementById('profileResponse').textContent += 
+                        '- data.user.id: ' + data.user.id + '\n' +
+                        '- data.user.email: ' + data.user.email + '\n' +
+                        '- data.user.role: ' + data.user.role + '\n';
+                }
+                
+                console.log('Profile response:', data);
+                console.log('data.user:', data.user);
+                console.log('data.user.id:', data.user?.id);
+            } catch (error) {
+                document.getElementById('profileResponse').textContent = 
+                    'ERROR: ' + error.message;
+            }
+        }
+
+        function checkStorage() {
+            const output = [];
+            
+            // Check localStorage
+            output.push('=== localStorage ===');
+            try {
+                const token = localStorage.getItem('token');
+                const user = localStorage.getItem('user');
+                output.push('token: ' + (token ? token.substring(0, 30) + '...' : 'null'));
+                output.push('user: ' + (user || 'null'));
+                
+                if (user) {
+                    const parsed = JSON.parse(user);
+                    output.push('\nParsed user object:');
+                    output.push(JSON.stringify(parsed, null, 2));
+                    output.push('\nuser.id: ' + parsed.id);
+                }
+            } catch (e) {
+                output.push('localStorage ERROR: ' + e.message);
+            }
+            
+            // Check sessionStorage
+            output.push('\n=== sessionStorage ===');
+            try {
+                const token = sessionStorage.getItem('token');
+                const user = sessionStorage.getItem('user');
+                output.push('token: ' + (token ? token.substring(0, 30) + '...' : 'null'));
+                output.push('user: ' + (user || 'null'));
+                
+                if (user) {
+                    const parsed = JSON.parse(user);
+                    output.push('\nParsed user object:');
+                    output.push(JSON.stringify(parsed, null, 2));
+                    output.push('\nuser.id: ' + parsed.id);
+                }
+            } catch (e) {
+                output.push('sessionStorage ERROR: ' + e.message);
+            }
+            
+            document.getElementById('storageData').textContent = output.join('\n');
+        }
+    </script>
+</body>
+</html>
