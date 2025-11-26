@@ -1,0 +1,111 @@
+﻿.sidebar-overlay {
+  position: fixed;
+  top: 60px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+  animation: fadeIn 0.2s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.sidebar {
+  position: fixed;
+  top: 60px;
+  left: -280px;
+  width: 280px;
+  bottom: 0;
+  background: #34495e;
+  color: white;
+  transition: left 0.3s ease;
+  z-index: 999;
+  overflow-y: auto;
+}
+
+.sidebar.open {
+  left: 0;
+}
+
+.sidebar-nav {
+  padding: 1rem 0;
+}
+
+.sidebar-header {
+  padding: 0 1.5rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sidebar-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.role-badge {
+  background: #3498db;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.menu-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0 0;
+}
+
+.menu-list li {
+  margin: 0;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 0.875rem 1.5rem;
+  color: #ecf0f1;
+  text-decoration: none;
+  transition: all 0.2s;
+  gap: 1rem;
+}
+
+.menu-item:hover {
+  background: rgba(255,255,255,0.1);
+  padding-left: 2rem;
+}
+
+.menu-item.active {
+  background: #2c3e50;
+  border-left: 4px solid #3498db;
+  padding-left: calc(1.5rem - 4px);
+}
+
+.menu-icon {
+  font-size: 1.2rem;
+  width: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-label {
+  font-size: 1rem;
+}
+
+@media (min-width: 768px) {
+  .sidebar-overlay {
+    display: none;
+  }
+  
+  .sidebar.open {
+    left: 0;
+  }
+}

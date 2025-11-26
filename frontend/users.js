@@ -26,6 +26,18 @@ document.addEventListener('DOMContentLoaded', () => {
             `${currentUser.firstName} ${currentUser.lastName} (${currentUser.role})`;
     }
     
+    // Show admin-only links
+    if (currentUser.role === 'admin') {
+        const usersLink = document.getElementById('usersLink');
+        if (usersLink) {
+            usersLink.style.display = 'flex';
+        }
+        const auditLink = document.getElementById('auditLink');
+        if (auditLink) {
+            auditLink.style.display = 'flex';
+        }
+    }
+    
     loadUsers();
     
     // Add event listeners

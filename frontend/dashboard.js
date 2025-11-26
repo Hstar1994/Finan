@@ -105,6 +105,10 @@ function initDashboard() {
         if (usersLink) {
             usersLink.style.display = 'flex';
         }
+        const auditLink = document.getElementById('auditLink');
+        if (auditLink) {
+            auditLink.style.display = 'flex';
+        }
     }
     
     // Update user status card

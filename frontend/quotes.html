@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quotes - Finan</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="dashboard">
+        <nav class="navbar">
+            <div class="navbar-brand">
+                <button class="hamburger" id="hamburgerBtn" onclick="toggleSidebar()">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <h1>💰 Finan</h1>
+            </div>
+            <div class="navbar-menu">
+                <a href="profile.html" style="color: white; text-decoration: none; margin-right: 20px;">
+                    <span id="userInfo" class="user-info"></span>
+                </a>
+                <button id="logoutBtn" class="btn-logout">Logout</button>
+            </div>
+        </nav>
+        
+        <div class="dashboard-container">
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-menu">
+                    <a href="dashboard.html" class="menu-item">
+                        <span class="icon">📊</span>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="users.html" class="menu-item" id="usersLink" style="display: none;">
+                        <span class="icon">🔑</span>
+                        <span>Users</span>
+                    </a>
+                    <a href="customers.html" class="menu-item">
+                        <span class="icon">👥</span>
+                        <span>Customers</span>
+                    </a>
+                    <a href="items.html" class="menu-item">
+                        <span class="icon">🏷️</span>
+                        <span>Items</span>
+                    </a>
+                    <a href="invoices.html" class="menu-item">
+                        <span class="icon">📄</span>
+                        <span>Invoices</span>
+                    </a>
+                    <a href="quotes.html" class="menu-item active">
+                        <span class="icon">📋</span>
+                        <span>Quotes</span>
+                    </a>
+                    <a href="receipts.html" class="menu-item">
+                        <span class="icon">💰</span>
+                        <span>Receipts</span>
+                    </a>
+                    <a href="audit-logs.html" class="menu-item" id="auditLink" style="display: none;">
+                        <span class="icon">📝</span>
+                        <span>Audit Logs</span>
+                    </a>
+                </div>
+            </aside>
+            
+            <main class="main-content">
+                <div class="content-header">
+                    <h2>📋 Quotes</h2>
+                    <p>Manage customer quotes and estimates</p>
+                </div>
+                
+                <div class="info-card">
+                    <h3>Quote Management</h3>
+                    <p>This page will display and manage all quotes. Features coming soon:</p>
+                    <ul>
+                        <li>View all quotes</li>
+                        <li>Create new quotes</li>
+                        <li>Convert quotes to invoices</li>
+                        <li>Track quote status</li>
+                        <li>Generate PDF quotes</li>
+                    </ul>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <script src="page-init.js"></script>
+</body>
+</html>

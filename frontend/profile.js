@@ -24,6 +24,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (usersLink) {
             usersLink.style.display = 'flex';
         }
+        const auditLink = document.getElementById('auditLink');
+        if (auditLink) {
+            auditLink.style.display = 'flex';
+        }
     }
     
     loadProfile();
