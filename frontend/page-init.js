@@ -41,13 +41,26 @@ if (logoutBtn) {
     });
 }
 
-// Sidebar toggle - make it globally accessible
+// Sidebar toggle - make it globally accessible with persistence
 window.toggleSidebar = function() {
     const sidebar = document.getElementById('sidebar');
     if (sidebar) {
         sidebar.classList.toggle('active');
+        // Save the state to localStorage
+        const isActive = sidebar.classList.contains('active');
+        localStorage.setItem('sidebarOpen', isActive);
     }
 }
+
+// Restore sidebar state on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOpen = localStorage.getItem('sidebarOpen');
+    
+    if (sidebar && sidebarOpen === 'true') {
+        sidebar.classList.add('active');
+    }
+});
 
 // Update user info in navbar
 const userInfo = document.getElementById('userInfo');

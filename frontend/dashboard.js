@@ -254,7 +254,20 @@ setInterval(async () => {
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     sidebar.classList.toggle('active');
+    // Save the state to localStorage
+    const isActive = sidebar.classList.contains('active');
+    localStorage.setItem('sidebarOpen', isActive);
 }
+
+// Restore sidebar state on page load
+window.addEventListener('DOMContentLoaded', function() {
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOpen = localStorage.getItem('sidebarOpen');
+    
+    if (sidebar && sidebarOpen === 'true') {
+        sidebar.classList.add('active');
+    }
+});
 
 // Close sidebar when clicking outside on mobile
 document.addEventListener('click', (e) => {
