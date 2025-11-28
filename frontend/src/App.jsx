@@ -1,7 +1,10 @@
 ﻿import React from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider } from './contexts/AuthContext'
 import { LayoutProvider } from './contexts/LayoutContext'
+import ProtectedRoute from './components/ProtectedRoute'
 import Layout from './components/Layout'
+import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Customers from './pages/Customers'
 import Items from './pages/Items'
@@ -14,27 +17,49 @@ import AuditLogs from './pages/AuditLogs'
 function App() {
   return (
     <BrowserRouter>
-      <LayoutProvider>
-        <Layout>
+      <AuthProvider>
+        <LayoutProvider>
           <Routes>
-            {/* Redirect root to dashboard */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            {/* Public routes */}
+            <Route path="/login" element={<Login />} />
             
-            {/* Protected routes - only children update */}
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/customers" element={<Customers />} />
-            <Route path="/items" element={<Items />} />
-            <Route path="/invoices" element={<Invoices />} />
-            <Route path="/quotes" element={<Quotes />} />
-            <Route path="/receipts" element={<Receipts />} />
-            <Route path="/users" element={<Users />} />
-            <Route path="/audit-logs" element={<AuditLogs />} />
-            
-            {/* 404 */}
-            <Route path="*" element={<div><h1>404 - Page Not Found</h1></div>} />
+            {/* Protected routes with Layout */}
+            <Route
+              path="/*"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Routes>
+                      {/* Redirect root to dashboard */}
+                      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                      
+                      {/* Application routes */}
+                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/customers" element={<Customers />} />
+                      <Route path="/items" element={<Items />} />
+                      <Route path="/invoices" element={<Invoices />} />
+                      <Route path="/quotes" element={<Quotes />} />
+                      <Route path="/receipts" element={<Receipts />} />
+                      <Route path="/users" element={<Users />} />
+                      <Route 
+                        path="/audit-logs" 
+                        element={
+                          <ProtectedRoute requiredRole="admin">
+                            <AuditLogs />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      
+                      {/* 404 */}
+                      <Route path="*" element={<div><h1>404 - Page Not Found</h1></div>} />
+                    </Routes>
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
           </Routes>
-        </Layout>
-      </LayoutProvider>
+        </LayoutProvider>
+      </AuthProvider>
     </BrowserRouter>
   )
 }

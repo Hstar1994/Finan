@@ -55,7 +55,6 @@ const Sidebar = () => {
                 <NavLink
                   to={item.path}
                   className={({ isActive }) => `menu-item ${isActive ? 'active' : ''}`}
-                  onClick={closeSidebar}
                 >
                   <span className="menu-icon">{item.icon}</span>
                   <span className="menu-label">{item.label}</span>
