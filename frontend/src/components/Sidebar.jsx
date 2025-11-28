@@ -1,11 +1,13 @@
 ﻿import React, { useEffect, useRef } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useLayout } from '../contexts/LayoutContext'
+import { useAuth } from '../contexts/AuthContext'
 import { getMenuForRole } from '../config/menuConfig'
 import './Sidebar.css'
 
 const Sidebar = () => {
-  const { isSidebarOpen, closeSidebar, user } = useLayout()
+  const { isSidebarOpen, closeSidebar } = useLayout()
+  const { user } = useAuth()
   const menuItems = getMenuForRole(user?.role || 'user')
   const sidebarRef = useRef(null)
   const hasRendered = useRef(false)

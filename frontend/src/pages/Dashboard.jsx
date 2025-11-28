@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react'
-import { useLayout } from '../contexts/LayoutContext'
+import { useAuth } from '../contexts/AuthContext'
 import { getCustomers, getInvoices } from '../utils/api'
 
 // Role-based permissions
@@ -34,7 +34,7 @@ const permissions = {
 }
 
 const Dashboard = () => {
-  const { user } = useLayout()
+  const { user } = useAuth()
   const [stats, setStats] = useState({ customers: 0, invoices: 0 })
   const [loading, setLoading] = useState(true)
   const [loginTime] = useState(new Date().toLocaleString())

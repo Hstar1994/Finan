@@ -18,7 +18,7 @@ export const LayoutProvider = ({ children }) => {
 
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem('user') || sessionStorage.getItem('user')
-    return savedUser ? JSON.parse(savedUser) : { role: 'admin', name: 'Admin User' }
+    return savedUser ? JSON.parse(savedUser) : null
   })
 
   useEffect(() => {
