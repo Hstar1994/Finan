@@ -35,12 +35,6 @@
       label: 'Receipts',
       icon: '💰',
       path: '/receipts'
-    },
-    {
-      id: 'credit-notes',
-      label: 'Credit Notes',
-      icon: '🔄',
-      path: '/credit-notes'
     }
   ],
   user: [],

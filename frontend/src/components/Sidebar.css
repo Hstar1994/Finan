@@ -22,9 +22,14 @@
   bottom: 0;
   background: #34495e;
   color: white;
-  transition: left 0.3s ease;
   z-index: 999;
   overflow-y: auto;
+  /* Only transition when .transitioning class is present */
+  transition: none;
+}
+
+.sidebar.transitioning {
+  transition: left 0.3s ease;
 }
 
 .sidebar.open {
