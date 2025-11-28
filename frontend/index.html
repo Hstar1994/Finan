@@ -1,75 +1,13 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finan - Login</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <div class="container">
-        <div class="login-box">
-            <div class="logo">
-                <h1>💰 Finan</h1>
-                <p>Modular Financing Application</p>
-            </div>
-            
-            <form id="loginForm" class="login-form">
-                <h2>Sign In</h2>
-                
-                <div id="errorMessage" class="error-message" style="display: none;"></div>
-                
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input 
-                        type="email" 
-                        id="email" 
-                        name="email" 
-                        required 
-                        placeholder="your@email.com"
-                        autocomplete="email"
-                    >
-                </div>
-                
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
-                        required 
-                        placeholder="Enter your password"
-                        autocomplete="current-password"
-                    >
-                </div>
-                
-                <button type="submit" class="btn-primary" id="loginBtn">
-                    <span id="btnText">Sign In</span>
-                    <span id="btnLoader" class="loader" style="display: none;"></span>
-                </button>
-                
-                <div class="demo-credentials">
-                    <p><strong>Demo Credentials:</strong></p>
-                    <div class="credential-row">
-                        <button type="button" class="btn-demo" data-email="admin@finan.com" data-password="admin123">
-                            👑 Admin
-                        </button>
-                        <button type="button" class="btn-demo" data-email="manager@finan.com" data-password="manager123">
-                            👔 Manager
-                        </button>
-                        <button type="button" class="btn-demo" data-email="user@finan.com" data-password="user123">
-                            👤 User
-                        </button>
-                    </div>
-                </div>
-            </form>
-            
-            <div class="footer">
-                <p>API Documentation: <a href="http://localhost:3000/api-docs" target="_blank">Swagger UI</a></p>
-            </div>
-        </div>
-    </div>
-    
-    <script src="app.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Finan - Financial Management</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>
