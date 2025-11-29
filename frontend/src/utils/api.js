@@ -67,8 +67,42 @@ export const getInvoices = async (page = 1, limit = 10) => {
   return response
 }
 
-export const getUsers = async (page = 1, limit = 10) => {
-  const response = await apiRequest(`/users?page=${page}&limit=${limit}`)
+export const getUsers = async (page = 1, limit = 10, filters = {}) => {
+  const params = new URLSearchParams({ page, limit, ...filters })
+  const response = await apiRequest(`/users?${params}`)
+  return response
+}
+
+export const getUserById = async (id) => {
+  const response = await apiRequest(`/users/${id}`)
+  return response
+}
+
+export const createUser = async (userData) => {
+  const response = await apiRequest('/users', {
+    method: 'POST',
+    body: JSON.stringify(userData)
+  })
+  return response
+}
+
+export const updateUser = async (id, userData) => {
+  const response = await apiRequest(`/users/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(userData)
+  })
+  return response
+}
+
+export const deleteUser = async (id) => {
+  const response = await apiRequest(`/users/${id}`, {
+    method: 'DELETE'
+  })
+  return response
+}
+
+export const getUserStats = async () => {
+  const response = await apiRequest('/users/stats')
   return response
 }
 
