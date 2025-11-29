@@ -169,8 +169,37 @@ export const deleteItem = async (id) => {
   return response
 }
 
-export const getQuotes = async (page = 1, limit = 10) => {
-  const response = await apiRequest(`/quotes?page=${page}&limit=${limit}`)
+export const getQuotes = async (page = 1, limit = 10, filters = {}) => {
+  const params = new URLSearchParams({ page, limit, ...filters })
+  const response = await apiRequest(`/quotes?${params}`)
+  return response
+}
+
+export const getQuoteById = async (id) => {
+  const response = await apiRequest(`/quotes/${id}`)
+  return response
+}
+
+export const createQuote = async (quoteData) => {
+  const response = await apiRequest('/quotes', {
+    method: 'POST',
+    body: JSON.stringify(quoteData)
+  })
+  return response
+}
+
+export const updateQuote = async (id, quoteData) => {
+  const response = await apiRequest(`/quotes/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(quoteData)
+  })
+  return response
+}
+
+export const deleteQuote = async (id) => {
+  const response = await apiRequest(`/quotes/${id}`, {
+    method: 'DELETE'
+  })
   return response
 }
 
