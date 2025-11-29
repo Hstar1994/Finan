@@ -57,8 +57,37 @@ const apiRequest = async (endpoint, options = {}) => {
   }
 }
 
-export const getCustomers = async (page = 1, limit = 10) => {
-  const response = await apiRequest(`/customers?page=${page}&limit=${limit}`)
+export const getCustomers = async (page = 1, limit = 10, filters = {}) => {
+  const params = new URLSearchParams({ page, limit, ...filters })
+  const response = await apiRequest(`/customers?${params}`)
+  return response
+}
+
+export const getCustomerById = async (id) => {
+  const response = await apiRequest(`/customers/${id}`)
+  return response
+}
+
+export const createCustomer = async (customerData) => {
+  const response = await apiRequest('/customers', {
+    method: 'POST',
+    body: JSON.stringify(customerData)
+  })
+  return response
+}
+
+export const updateCustomer = async (id, customerData) => {
+  const response = await apiRequest(`/customers/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(customerData)
+  })
+  return response
+}
+
+export const deleteCustomer = async (id) => {
+  const response = await apiRequest(`/customers/${id}`, {
+    method: 'DELETE'
+  })
   return response
 }
 

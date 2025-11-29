@@ -19,16 +19,16 @@
       path: '/items'
     },
     {
-      id: 'invoices',
-      label: 'Invoices',
-      icon: '📄',
-      path: '/invoices'
-    },
-    {
       id: 'quotes',
       label: 'Quotes',
-      icon: '📋',
+      icon: '�',
       path: '/quotes'
+    },
+    {
+      id: 'invoices',
+      label: 'Invoices',
+      icon: '�',
+      path: '/invoices'
     },
     {
       id: 'receipts',
@@ -57,7 +57,16 @@
 
 export const getMenuForRole = (role) => {
   const roleMenus = {
-    admin: [...menuConfig.admin, ...menuConfig.manager, ...menuConfig.shared],
+    admin: [
+      menuConfig.shared[0], // Dashboard
+      menuConfig.admin[0],  // Users
+      menuConfig.shared[1], // Customers
+      menuConfig.shared[2], // Items
+      menuConfig.shared[3], // Quotes
+      menuConfig.shared[4], // Invoices
+      menuConfig.shared[5], // Receipts
+      menuConfig.admin[1]   // Audit Logs
+    ],
     manager: [...menuConfig.manager, ...menuConfig.shared],
     user: [...menuConfig.shared]
   }
