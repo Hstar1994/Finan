@@ -135,8 +135,37 @@ export const getUserStats = async () => {
   return response
 }
 
-export const getItems = async (page = 1, limit = 10) => {
-  const response = await apiRequest(`/items?page=${page}&limit=${limit}`)
+export const getItems = async (page = 1, limit = 10, filters = {}) => {
+  const params = new URLSearchParams({ page, limit, ...filters })
+  const response = await apiRequest(`/items?${params}`)
+  return response
+}
+
+export const getItemById = async (id) => {
+  const response = await apiRequest(`/items/${id}`)
+  return response
+}
+
+export const createItem = async (itemData) => {
+  const response = await apiRequest('/items', {
+    method: 'POST',
+    body: JSON.stringify(itemData)
+  })
+  return response
+}
+
+export const updateItem = async (id, itemData) => {
+  const response = await apiRequest(`/items/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(itemData)
+  })
+  return response
+}
+
+export const deleteItem = async (id) => {
+  const response = await apiRequest(`/items/${id}`, {
+    method: 'DELETE'
+  })
   return response
 }
 
