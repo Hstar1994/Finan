@@ -91,8 +91,37 @@ export const deleteCustomer = async (id) => {
   return response
 }
 
-export const getInvoices = async (page = 1, limit = 10) => {
-  const response = await apiRequest(`/invoices?page=${page}&limit=${limit}`)
+export const getInvoices = async (page = 1, limit = 10, filters = {}) => {
+  const params = new URLSearchParams({ page, limit, ...filters })
+  const response = await apiRequest(`/invoices?${params}`)
+  return response
+}
+
+export const getInvoiceById = async (id) => {
+  const response = await apiRequest(`/invoices/${id}`)
+  return response
+}
+
+export const createInvoice = async (invoiceData) => {
+  const response = await apiRequest('/invoices', {
+    method: 'POST',
+    body: JSON.stringify(invoiceData)
+  })
+  return response
+}
+
+export const updateInvoice = async (id, invoiceData) => {
+  const response = await apiRequest(`/invoices/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(invoiceData)
+  })
+  return response
+}
+
+export const deleteInvoice = async (id) => {
+  const response = await apiRequest(`/invoices/${id}`, {
+    method: 'DELETE'
+  })
   return response
 }
 
