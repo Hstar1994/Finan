@@ -69,7 +69,7 @@
 
 - [x] **Database accepts UTF-8 Arabic text** - PostgreSQL supports UTF-8 by default
 - [x] **API responses support Arabic** - No restrictions on text encoding
-- [ ] **Error messages allow Arabic content** - Currently English only, needs i18n
+- [ ] **Error messages allow Arabic content** - ⏭️ PENDING i18n system (Section D RTL/Arabic)
 
 ---
 
