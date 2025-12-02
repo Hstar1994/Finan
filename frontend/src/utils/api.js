@@ -232,8 +232,37 @@ export const deleteQuote = async (id) => {
   return response
 }
 
-export const getReceipts = async (page = 1, limit = 10) => {
-  const response = await apiRequest(`/receipts?page=${page}&limit=${limit}`)
+export const getReceipts = async (page = 1, limit = 10, filters = {}) => {
+  const params = new URLSearchParams({ page, limit, ...filters })
+  const response = await apiRequest(`/receipts?${params}`)
+  return response
+}
+
+export const getReceiptById = async (id) => {
+  const response = await apiRequest(`/receipts/${id}`)
+  return response
+}
+
+export const createReceipt = async (receiptData) => {
+  const response = await apiRequest('/receipts', {
+    method: 'POST',
+    body: JSON.stringify(receiptData)
+  })
+  return response
+}
+
+export const updateReceipt = async (id, receiptData) => {
+  const response = await apiRequest(`/receipts/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(receiptData)
+  })
+  return response
+}
+
+export const deleteReceipt = async (id) => {
+  const response = await apiRequest(`/receipts/${id}`, {
+    method: 'DELETE'
+  })
   return response
 }
 
