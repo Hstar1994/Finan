@@ -271,7 +271,13 @@ export const getCreditNotes = async (page = 1, limit = 10) => {
   return response
 }
 
-export const getAuditLogs = async (page = 1, limit = 10) => {
-  const response = await apiRequest(`/audit?page=${page}&limit=${limit}`)
+export const getAuditLogs = async (page = 1, limit = 50, filters = {}) => {
+  const params = new URLSearchParams({ page, limit, ...filters })
+  const response = await apiRequest(`/audit?${params}`)
+  return response
+}
+
+export const getAuditLogById = async (id) => {
+  const response = await apiRequest(`/audit/${id}`)
   return response
 }
