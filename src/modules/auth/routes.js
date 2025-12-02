@@ -3,6 +3,7 @@ const router = express.Router();
 const controller = require('./controller');
 const { authenticate, authorize } = require('../../middleware/auth');
 const auditLogger = require('../../middleware/auditLogger');
+const { loginLimiter, strictLimiter } = require('../../middleware/rateLimiter');
 
 /**
  * @swagger
@@ -62,8 +63,10 @@ router.post('/register', authenticate, authorize('admin'), auditLogger('CREATE',
  *     responses:
  *       200:
  *         description: Login successful
+ *       429:
+ *         description: Too many login attempts
  */
-router.post('/login', controller.login);
+router.post('/login', loginLimiter, controller.login);
 
 /**
  * @swagger
@@ -131,8 +134,10 @@ router.put('/profile', authenticate, auditLogger('UPDATE', 'User'), controller.u
  *     responses:
  *       200:
  *         description: Password changed successfully
+ *       429:
+ *         description: Too many attempts
  */
-router.post('/change-password', authenticate, auditLogger('UPDATE', 'User'), controller.changePassword);
+router.post('/change-password', strictLimiter, authenticate, auditLogger('UPDATE', 'User'), controller.changePassword);
 
 /**
  * @swagger
@@ -159,8 +164,10 @@ router.post('/change-password', authenticate, auditLogger('UPDATE', 'User'), con
  *     responses:
  *       200:
  *         description: Password reset successfully
+ *       429:
+ *         description: Too many attempts
  */
-router.post('/reset-password', authenticate, authorize('admin'), controller.resetUserPassword);
+router.post('/reset-password', strictLimiter, authenticate, authorize('admin'), controller.resetUserPassword);
 
 /**
  * @swagger

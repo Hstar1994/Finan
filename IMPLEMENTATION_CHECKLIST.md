@@ -52,7 +52,7 @@
 
 - [x] **JWT auth middleware** - Complete with token verification
 - [x] **Bcrypt password hashing** - Implemented in User model
-- [ ] **Rate limiting on login** - Not yet implemented
+- [x] **Rate limiting on login** - ✅ COMPLETE - Login (5/15min), password changes (3/15min), API general (100/15min)
 - [x] **Helmet and CORS configured** - Basic security headers set
 - [x] **Safe error responses** - Error handler middleware in place
 
@@ -249,7 +249,7 @@
 ### Phase 2: Enhancements & Localization (🔄 IN PROGRESS)
 
 - [ ] **Implement CreditNote model and pages** - ⏭️ SKIPPED (Moved to Phase 3)
-- [ ] **Add rate limiting on login endpoint** - Backend security
+- [x] **Add rate limiting on login endpoint** - ✅ COMPLETE - Login, password change, and password reset endpoints protected
 - [x] **Enhance customer balance tracking** - ✅ COMPLETE - All invoice and receipt operations now update customer balance with database transactions
 - [ ] **Add comprehensive backend tests** - Unit + Integration tests
 - [ ] **Complete Swagger documentation** - All endpoints documented
