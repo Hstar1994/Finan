@@ -18,7 +18,7 @@
 - [x] **InvoiceItem** - Complete (DocumentLineItem)
 - [x] **QuoteItem** - Complete (DocumentLineItem)
 - [x] **Receipt** - Complete (Payment model)
-- [ ] **CreditNote** - Not yet implemented
+- [ ] **CreditNote** - ⏭️ SKIPPED (Phase 3 feature)
 - [x] **AuditLog** - Complete with comprehensive logging
 
 ### Validation
@@ -38,9 +38,9 @@
 
 - [x] **Payments update invoice outstanding amount** - Receipt creation updates invoice.amountPaid
 - [x] **Payments update invoice status** - Auto-updates to 'paid' or 'partial'
-- [ ] **Payments update customer balance** - Partially implemented, needs enhancement
-- [ ] **Credit notes reduce invoice total and update balance** - CreditNote not yet implemented
-- [ ] **Credit notes properly linked to invoices** - CreditNote not yet implemented
+- [x] **Payments update customer balance** - ✅ COMPLETE (Phase 2) - Receipts now update customer balance with transactions
+- [ ] **Credit notes reduce invoice total and update balance** - ⏭️ SKIPPED (Phase 3)
+- [ ] **Credit notes properly linked to invoices** - ⏭️ SKIPPED (Phase 3)
 
 ### Role Enforcement (Backend)
 
@@ -246,11 +246,11 @@
 - [x] **Implement Receipts and payments logic** - Done
 - [x] **Implement Audit Logs page** - Done
 
-### Phase 2: Enhancements & Localization (🔄 NEXT)
+### Phase 2: Enhancements & Localization (🔄 IN PROGRESS)
 
-- [ ] **Implement CreditNote model and pages** - Backend + Frontend
+- [ ] **Implement CreditNote model and pages** - ⏭️ SKIPPED (Moved to Phase 3)
 - [ ] **Add rate limiting on login endpoint** - Backend security
-- [ ] **Enhance customer balance tracking** - Auto-update on all transactions
+- [x] **Enhance customer balance tracking** - ✅ COMPLETE - All invoice and receipt operations now update customer balance with database transactions
 - [ ] **Add comprehensive backend tests** - Unit + Integration tests
 - [ ] **Complete Swagger documentation** - All endpoints documented
 - [ ] **Implement full RTL layout support** - CSS and component adjustments

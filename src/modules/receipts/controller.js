@@ -1,4 +1,5 @@
 const { Receipt, Customer, Invoice } = require('../../database/models');
+const { sequelize } = require('../../database/connection');
 
 const generateReceiptNumber = async () => {
   const count = await Receipt.count();
@@ -58,11 +59,21 @@ const getById = async (req, res, next) => {
 };
 
 const create = async (req, res, next) => {
+  const t = await sequelize.transaction();
+  
   try {
     const { customerId, invoiceId, amount, paymentMethod, reference, notes } = req.body;
     
     if (!customerId || !amount) {
+      await t.rollback();
       return res.status(400).json({ error: 'Customer and amount are required' });
+    }
+    
+    const paymentAmount = parseFloat(amount);
+    
+    if (paymentAmount <= 0) {
+      await t.rollback();
+      return res.status(400).json({ error: 'Amount must be greater than zero' });
     }
     
     const receiptNumber = await generateReceiptNumber();
@@ -72,61 +83,178 @@ const create = async (req, res, next) => {
       customerId,
       invoiceId,
       paymentDate: new Date(),
-      amount,
+      amount: paymentAmount,
       paymentMethod: paymentMethod || 'cash',
       reference,
       notes,
       createdBy: req.user.id
-    });
+    }, { transaction: t });
     
     // Update invoice if linked
     if (invoiceId) {
-      const invoice = await Invoice.findByPk(invoiceId);
+      const invoice = await Invoice.findByPk(invoiceId, { transaction: t });
       if (invoice) {
-        invoice.amountPaid = parseFloat(invoice.amountPaid) + parseFloat(amount);
+        // Verify invoice belongs to the same customer
+        if (invoice.customerId !== customerId) {
+          await t.rollback();
+          return res.status(400).json({ error: 'Invoice does not belong to the selected customer' });
+        }
         
+        invoice.amountPaid = parseFloat(invoice.amountPaid) + paymentAmount;
+        
+        // Prevent overpayment
+        if (invoice.amountPaid > invoice.totalAmount) {
+          await t.rollback();
+          return res.status(400).json({ 
+            error: 'Payment amount exceeds invoice balance',
+            invoiceBalance: invoice.totalAmount - (invoice.amountPaid - paymentAmount)
+          });
+        }
+        
+        // Update invoice status based on payment
         if (invoice.amountPaid >= invoice.totalAmount) {
           invoice.status = 'paid';
         } else if (invoice.amountPaid > 0) {
           invoice.status = 'partial';
         }
         
-        await invoice.save();
+        await invoice.save({ transaction: t });
       }
     }
     
+    // Update customer balance (decrease balance as payment is received)
+    const customer = await Customer.findByPk(customerId, { transaction: t });
+    if (customer) {
+      customer.balance = parseFloat(customer.balance) - paymentAmount;
+      await customer.save({ transaction: t });
+    }
+    
+    await t.commit();
+    
     res.status(201).json({ message: 'Receipt created successfully', receipt });
   } catch (error) {
+    await t.rollback();
     next(error);
   }
 };
 
 const update = async (req, res, next) => {
+  const t = await sequelize.transaction();
+  
   try {
-    const receipt = await Receipt.findByPk(req.params.id);
+    const receipt = await Receipt.findByPk(req.params.id, { transaction: t });
     
     if (!receipt) {
+      await t.rollback();
       return res.status(404).json({ error: 'Receipt not found' });
     }
     
-    await receipt.update(req.body);
+    const { amount, paymentMethod, reference, notes } = req.body;
+    
+    // If amount is being changed, we need to update balances
+    if (amount && parseFloat(amount) !== parseFloat(receipt.amount)) {
+      const oldAmount = parseFloat(receipt.amount);
+      const newAmount = parseFloat(amount);
+      const amountDifference = newAmount - oldAmount;
+      
+      // Update invoice if linked
+      if (receipt.invoiceId) {
+        const invoice = await Invoice.findByPk(receipt.invoiceId, { transaction: t });
+        if (invoice) {
+          invoice.amountPaid = parseFloat(invoice.amountPaid) + amountDifference;
+          
+          // Prevent overpayment
+          if (invoice.amountPaid > invoice.totalAmount) {
+            await t.rollback();
+            return res.status(400).json({ 
+              error: 'Updated amount would exceed invoice balance',
+              invoiceBalance: invoice.totalAmount - (invoice.amountPaid - amountDifference)
+            });
+          }
+          
+          // Update invoice status
+          if (invoice.amountPaid >= invoice.totalAmount) {
+            invoice.status = 'paid';
+          } else if (invoice.amountPaid > 0) {
+            invoice.status = 'partial';
+          } else {
+            invoice.status = invoice.status === 'paid' || invoice.status === 'partial' ? 'sent' : invoice.status;
+          }
+          
+          await invoice.save({ transaction: t });
+        }
+      }
+      
+      // Update customer balance
+      const customer = await Customer.findByPk(receipt.customerId, { transaction: t });
+      if (customer) {
+        customer.balance = parseFloat(customer.balance) - amountDifference;
+        await customer.save({ transaction: t });
+      }
+      
+      receipt.amount = newAmount;
+    }
+    
+    // Update other fields
+    if (paymentMethod) receipt.paymentMethod = paymentMethod;
+    if (reference !== undefined) receipt.reference = reference;
+    if (notes !== undefined) receipt.notes = notes;
+    
+    await receipt.save({ transaction: t });
+    await t.commit();
+    
     res.json({ message: 'Receipt updated successfully', receipt });
   } catch (error) {
+    await t.rollback();
     next(error);
   }
 };
 
 const remove = async (req, res, next) => {
+  const t = await sequelize.transaction();
+  
   try {
-    const receipt = await Receipt.findByPk(req.params.id);
+    const receipt = await Receipt.findByPk(req.params.id, { transaction: t });
     
     if (!receipt) {
+      await t.rollback();
       return res.status(404).json({ error: 'Receipt not found' });
     }
     
-    await receipt.destroy();
+    const receiptAmount = parseFloat(receipt.amount);
+    
+    // Reverse invoice payment if linked
+    if (receipt.invoiceId) {
+      const invoice = await Invoice.findByPk(receipt.invoiceId, { transaction: t });
+      if (invoice) {
+        invoice.amountPaid = parseFloat(invoice.amountPaid) - receiptAmount;
+        
+        // Update invoice status
+        if (invoice.amountPaid >= invoice.totalAmount) {
+          invoice.status = 'paid';
+        } else if (invoice.amountPaid > 0) {
+          invoice.status = 'partial';
+        } else {
+          invoice.status = invoice.status === 'paid' || invoice.status === 'partial' ? 'sent' : invoice.status;
+        }
+        
+        await invoice.save({ transaction: t });
+      }
+    }
+    
+    // Reverse customer balance (add back the payment amount)
+    const customer = await Customer.findByPk(receipt.customerId, { transaction: t });
+    if (customer) {
+      customer.balance = parseFloat(customer.balance) + receiptAmount;
+      await customer.save({ transaction: t });
+    }
+    
+    await receipt.destroy({ transaction: t });
+    await t.commit();
+    
     res.json({ message: 'Receipt deleted successfully' });
   } catch (error) {
+    await t.rollback();
     next(error);
   }
 };
