@@ -1,41 +1,43 @@
+const ApiResponse = require('../utils/apiResponse');
+
 const errorHandler = (err, req, res, next) => {
   console.error('Error:', err);
   
   // Sequelize validation errors
   if (err.name === 'SequelizeValidationError') {
-    return res.status(400).json({
-      error: 'Validation error',
-      details: err.errors.map(e => ({
-        field: e.path,
-        message: e.message
-      }))
-    });
+    const errors = err.errors.map(e => ({
+      field: e.path,
+      message: e.message,
+      value: e.value
+    }));
+    return ApiResponse.validationError(res, errors, 'Database validation error');
   }
   
   // Sequelize unique constraint errors
   if (err.name === 'SequelizeUniqueConstraintError') {
-    return res.status(409).json({
-      error: 'Duplicate entry',
-      details: err.errors.map(e => ({
-        field: e.path,
-        message: e.message
-      }))
-    });
+    const errors = err.errors.map(e => ({
+      field: e.path,
+      message: e.message,
+      value: e.value
+    }));
+    return ApiResponse.error(res, 'Duplicate entry detected', errors, 409);
   }
   
   // JWT errors
   if (err.name === 'JsonWebTokenError') {
-    return res.status(401).json({ error: 'Invalid token' });
+    return ApiResponse.unauthorized(res, 'Invalid authentication token');
   }
   
   if (err.name === 'TokenExpiredError') {
-    return res.status(401).json({ error: 'Token expired' });
+    return ApiResponse.unauthorized(res, 'Authentication token has expired');
   }
   
   // Default error
-  res.status(err.statusCode || 500).json({
-    error: err.message || 'Internal server error'
-  });
+  return ApiResponse.serverError(
+    res, 
+    err.message || 'Internal server error',
+    process.env.NODE_ENV === 'development' ? err : null
+  );
 };
 
 module.exports = errorHandler;
