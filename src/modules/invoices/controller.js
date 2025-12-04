@@ -1,11 +1,7 @@
 const { Invoice, InvoiceItem, Customer, Item } = require('../../database/models');
 const { sequelize } = require('../../database/connection');
 const { Op } = require('sequelize');
-
-const generateInvoiceNumber = async () => {
-  const count = await Invoice.count();
-  return `INV-${String(count + 1).padStart(6, '0')}`;
-};
+const { generateInvoiceNumber } = require('../../utils/numberGenerator');
 
 const getAll = async (req, res, next) => {
   try {
@@ -90,8 +86,8 @@ const create = async (req, res, next) => {
     
     const totalAmount = subtotal + taxAmount;
     
-    // Generate invoice number
-    const invoiceNumber = await generateInvoiceNumber();
+    // Generate invoice number (pass transaction to ensure consistency)
+    const invoiceNumber = await generateInvoiceNumber(t);
     
     // Create invoice
     const invoice = await Invoice.create({

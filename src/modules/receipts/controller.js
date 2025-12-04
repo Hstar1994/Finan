@@ -1,10 +1,6 @@
 const { Receipt, Customer, Invoice } = require('../../database/models');
 const { sequelize } = require('../../database/connection');
-
-const generateReceiptNumber = async () => {
-  const count = await Receipt.count();
-  return `REC-${String(count + 1).padStart(6, '0')}`;
-};
+const { generateReceiptNumber } = require('../../utils/numberGenerator');
 
 const getAll = async (req, res, next) => {
   try {
@@ -76,7 +72,8 @@ const create = async (req, res, next) => {
       return res.status(400).json({ error: 'Amount must be greater than zero' });
     }
     
-    const receiptNumber = await generateReceiptNumber();
+    // Generate receipt number (pass transaction to ensure consistency)
+    const receiptNumber = await generateReceiptNumber(t);
     
     const receipt = await Receipt.create({
       receiptNumber,
