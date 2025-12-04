@@ -4,6 +4,7 @@ const controller = require('./controller');
 const { authenticate, authorize } = require('../../middleware/auth');
 const auditLogger = require('../../middleware/auditLogger');
 const { loginLimiter, strictLimiter } = require('../../middleware/rateLimiter');
+const { validateLogin, validateRegister, validateChangePassword } = require('../../validators/auth.validator');
 
 /**
  * @swagger
@@ -38,7 +39,7 @@ const { loginLimiter, strictLimiter } = require('../../middleware/rateLimiter');
  *       201:
  *         description: User registered successfully
  */
-router.post('/register', authenticate, authorize('admin'), auditLogger('CREATE', 'User'), controller.register);
+router.post('/register', authenticate, authorize('admin'), validateRegister, auditLogger('CREATE', 'User'), controller.register);
 
 /**
  * @swagger
@@ -63,10 +64,12 @@ router.post('/register', authenticate, authorize('admin'), auditLogger('CREATE',
  *     responses:
  *       200:
  *         description: Login successful
+ *       400:
+ *         description: Validation error
  *       429:
  *         description: Too many login attempts
  */
-router.post('/login', loginLimiter, controller.login);
+router.post('/login', loginLimiter, validateLogin, controller.login);
 
 /**
  * @swagger
@@ -137,7 +140,7 @@ router.put('/profile', authenticate, auditLogger('UPDATE', 'User'), controller.u
  *       429:
  *         description: Too many attempts
  */
-router.post('/change-password', strictLimiter, authenticate, auditLogger('UPDATE', 'User'), controller.changePassword);
+router.post('/change-password', strictLimiter, authenticate, validateChangePassword, auditLogger('UPDATE', 'User'), controller.changePassword);
 
 /**
  * @swagger
