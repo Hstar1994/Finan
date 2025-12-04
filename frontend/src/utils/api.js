@@ -1,4 +1,6 @@
-﻿const API_URL = 'http://localhost:3000/api'
+﻿import config from '../config/env'
+
+const API_URL = config.apiUrl
 
 export const getToken = () => {
   return localStorage.getItem('token') || sessionStorage.getItem('token')
