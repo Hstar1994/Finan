@@ -7,12 +7,17 @@ const { testConnection } = require('./database/connection');
 const routes = require('./routes');
 const errorHandler = require('./middleware/errorHandler');
 const { specs, swaggerUi } = require('./config/swagger');
+const requestLogger = require('./middleware/requestLogger');
+const logger = require('./utils/logger');
 
 const app = express();
 
 // Security middleware
 app.use(helmet());
 app.use(cors());
+
+// Request logging middleware (before routes)
+app.use(requestLogger);
 
 // Rate limiting
 const limiter = rateLimit({
@@ -51,13 +56,13 @@ const startServer = async () => {
     const dbConnected = await testConnection();
     
     if (!dbConnected) {
-      console.error('Failed to connect to database. Please check your configuration.');
+      logger.error('Failed to connect to database. Please check your configuration.');
       process.exit(1);
     }
     
     // Start listening
     app.listen(config.app.port, () => {
-      console.log(`
+      const startupMessage = `
 ╔═══════════════════════════════════════════════════════╗
 ║                    Finan API Server                   ║
 ╟───────────────────────────────────────────────────────╢
@@ -65,17 +70,22 @@ const startServer = async () => {
 ║  Port:        ${String(config.app.port).padEnd(39)}║
 ║  API Docs:    http://localhost:${config.app.port}/api-docs${' '.repeat(9)}║
 ╚═══════════════════════════════════════════════════════╝
-      `);
+      `;
+      console.log(startupMessage);
+      logger.info('Server started successfully', {
+        environment: config.app.env,
+        port: config.app.port,
+      });
     });
   } catch (error) {
-    console.error('Failed to start server:', error);
+    logger.error('Failed to start server:', error);
     process.exit(1);
   }
 };
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
-  console.error('Unhandled Promise Rejection:', err);
+  logger.error('Unhandled Promise Rejection:', err);
   process.exit(1);
 });
 
