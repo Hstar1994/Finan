@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react'
+﻿import React, { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { getCustomers, getCustomerById, createCustomer, updateCustomer, deleteCustomer } from '../utils/api'
 import './Customers.css'
@@ -9,6 +9,9 @@ const Customers = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [successMessage, setSuccessMessage] = useState('')
+
+  // Add ref to track component mount status
+  const isMountedRef = useRef(true)
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1)
@@ -42,6 +45,13 @@ const Customers = () => {
 
   const [formErrors, setFormErrors] = useState({})
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
+
   useEffect(() => {
     loadCustomers()
   }, [currentPage, searchTerm, statusFilter])
@@ -57,14 +67,21 @@ const Customers = () => {
 
       const data = await getCustomers(currentPage, 10, filters)
       
-      setCustomers(data.customers || [])
-      setTotalPages(data.pagination?.totalPages || 1)
-      setTotalCustomers(data.pagination?.total || 0)
+      // Only update state if component is still mounted
+      if (isMountedRef.current) {
+        setCustomers(data.customers || [])
+        setTotalPages(data.pagination?.totalPages || 1)
+        setTotalCustomers(data.pagination?.total || 0)
+      }
     } catch (err) {
-      setError(err.message || 'Failed to load customers')
-      setCustomers([])
+      if (isMountedRef.current) {
+        setError(err.message || 'Failed to load customers')
+        setCustomers([])
+      }
     } finally {
-      setLoading(false)
+      if (isMountedRef.current) {
+        setLoading(false)
+      }
     }
   }
 
