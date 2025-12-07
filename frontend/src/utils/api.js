@@ -1,285 +1,172 @@
-﻿import config from '../config/env'
+﻿import { api } from '../services/apiClient';
 
-const API_URL = config.apiUrl
-
+// Auth helper functions
 export const getToken = () => {
-  return localStorage.getItem('token') || sessionStorage.getItem('token')
-}
+  return localStorage.getItem('token') || sessionStorage.getItem('token');
+};
 
 export const getCurrentUser = () => {
-  const userStr = localStorage.getItem('user') || sessionStorage.getItem('user')
-  return userStr ? JSON.parse(userStr) : null
-}
+  const userStr = localStorage.getItem('user') || sessionStorage.getItem('user');
+  return userStr ? JSON.parse(userStr) : null;
+};
 
 export const isAuthenticated = () => {
-  return !!getToken()
-}
+  return !!getToken();
+};
 
 export const logout = () => {
-  localStorage.clear()
-  sessionStorage.clear()
-  window.location.href = '/index-vanilla.html'
-}
+  localStorage.clear();
+  sessionStorage.clear();
+  window.location.href = '/index-vanilla.html';
+};
 
-const apiRequest = async (endpoint, options = {}) => {
-  const token = getToken()
-  
-  if (!token) {
-    logout()
-    throw new Error('No authentication token')
-  }
-
-  const config = {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-      ...options.headers,
-    },
-  }
-
-  try {
-    const response = await fetch(`${API_URL}${endpoint}`, config)
-    
-    if (response.status === 401) {
-      logout()
-      throw new Error('Unauthorized')
-    }
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Request failed' }))
-      throw new Error(error.message || `HTTP ${response.status}`)
-    }
-
-    const data = await response.json()
-    return data
-  } catch (error) {
-    console.error('API Request Error:', error)
-    throw error
-  }
-}
-
+// Customer APIs
 export const getCustomers = async (page = 1, limit = 10, filters = {}) => {
-  const params = new URLSearchParams({ page, limit, ...filters })
-  const response = await apiRequest(`/customers?${params}`)
-  return response
-}
+  const params = new URLSearchParams({ page, limit, ...filters });
+  return api.get(`/customers?${params}`);
+};
 
 export const getCustomerById = async (id) => {
-  const response = await apiRequest(`/customers/${id}`)
-  return response
-}
+  return api.get(`/customers/${id}`);
+};
 
 export const createCustomer = async (customerData) => {
-  const response = await apiRequest('/customers', {
-    method: 'POST',
-    body: JSON.stringify(customerData)
-  })
-  return response
-}
+  return api.post('/customers', customerData);
+};
 
 export const updateCustomer = async (id, customerData) => {
-  const response = await apiRequest(`/customers/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(customerData)
-  })
-  return response
-}
+  return api.put(`/customers/${id}`, customerData);
+};
 
 export const deleteCustomer = async (id) => {
-  const response = await apiRequest(`/customers/${id}`, {
-    method: 'DELETE'
-  })
-  return response
-}
+  return api.delete(`/customers/${id}`);
+};
 
+// Invoice APIs
 export const getInvoices = async (page = 1, limit = 10, filters = {}) => {
-  const params = new URLSearchParams({ page, limit, ...filters })
-  const response = await apiRequest(`/invoices?${params}`)
-  return response
-}
+  const params = new URLSearchParams({ page, limit, ...filters });
+  return api.get(`/invoices?${params}`);
+};
 
 export const getInvoiceById = async (id) => {
-  const response = await apiRequest(`/invoices/${id}`)
-  return response
-}
+  return api.get(`/invoices/${id}`);
+};
 
 export const createInvoice = async (invoiceData) => {
-  const response = await apiRequest('/invoices', {
-    method: 'POST',
-    body: JSON.stringify(invoiceData)
-  })
-  return response
-}
+  return api.post('/invoices', invoiceData);
+};
 
 export const updateInvoice = async (id, invoiceData) => {
-  const response = await apiRequest(`/invoices/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(invoiceData)
-  })
-  return response
-}
+  return api.put(`/invoices/${id}`, invoiceData);
+};
 
 export const deleteInvoice = async (id) => {
-  const response = await apiRequest(`/invoices/${id}`, {
-    method: 'DELETE'
-  })
-  return response
-}
+  return api.delete(`/invoices/${id}`);
+};
 
+// User APIs
 export const getUsers = async (page = 1, limit = 10, filters = {}) => {
-  const params = new URLSearchParams({ page, limit, ...filters })
-  const response = await apiRequest(`/users?${params}`)
-  return response
-}
+  const params = new URLSearchParams({ page, limit, ...filters });
+  return api.get(`/users?${params}`);
+};
 
 export const getUserById = async (id) => {
-  const response = await apiRequest(`/users/${id}`)
-  return response
-}
+  return api.get(`/users/${id}`);
+};
 
 export const createUser = async (userData) => {
-  const response = await apiRequest('/users', {
-    method: 'POST',
-    body: JSON.stringify(userData)
-  })
-  return response
-}
+  return api.post('/users', userData);
+};
 
 export const updateUser = async (id, userData) => {
-  const response = await apiRequest(`/users/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(userData)
-  })
-  return response
-}
+  return api.put(`/users/${id}`, userData);
+};
 
 export const deleteUser = async (id) => {
-  const response = await apiRequest(`/users/${id}`, {
-    method: 'DELETE'
-  })
-  return response
-}
+  return api.delete(`/users/${id}`);
+};
 
 export const getUserStats = async () => {
-  const response = await apiRequest('/users/stats')
-  return response
-}
+  return api.get('/users/stats');
+};
 
+// Item APIs
 export const getItems = async (page = 1, limit = 10, filters = {}) => {
-  const params = new URLSearchParams({ page, limit, ...filters })
-  const response = await apiRequest(`/items?${params}`)
-  return response
-}
+  const params = new URLSearchParams({ page, limit, ...filters });
+  return api.get(`/items?${params}`);
+};
 
 export const getItemById = async (id) => {
-  const response = await apiRequest(`/items/${id}`)
-  return response
-}
+  return api.get(`/items/${id}`);
+};
 
 export const createItem = async (itemData) => {
-  const response = await apiRequest('/items', {
-    method: 'POST',
-    body: JSON.stringify(itemData)
-  })
-  return response
-}
+  return api.post('/items', itemData);
+};
 
 export const updateItem = async (id, itemData) => {
-  const response = await apiRequest(`/items/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(itemData)
-  })
-  return response
-}
+  return api.put(`/items/${id}`, itemData);
+};
 
 export const deleteItem = async (id) => {
-  const response = await apiRequest(`/items/${id}`, {
-    method: 'DELETE'
-  })
-  return response
-}
+  return api.delete(`/items/${id}`);
+};
 
+// Quote APIs
 export const getQuotes = async (page = 1, limit = 10, filters = {}) => {
-  const params = new URLSearchParams({ page, limit, ...filters })
-  const response = await apiRequest(`/quotes?${params}`)
-  return response
-}
+  const params = new URLSearchParams({ page, limit, ...filters });
+  return api.get(`/quotes?${params}`);
+};
 
 export const getQuoteById = async (id) => {
-  const response = await apiRequest(`/quotes/${id}`)
-  return response
-}
+  return api.get(`/quotes/${id}`);
+};
 
 export const createQuote = async (quoteData) => {
-  const response = await apiRequest('/quotes', {
-    method: 'POST',
-    body: JSON.stringify(quoteData)
-  })
-  return response
-}
+  return api.post('/quotes', quoteData);
+};
 
 export const updateQuote = async (id, quoteData) => {
-  const response = await apiRequest(`/quotes/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(quoteData)
-  })
-  return response
-}
+  return api.put(`/quotes/${id}`, quoteData);
+};
 
 export const deleteQuote = async (id) => {
-  const response = await apiRequest(`/quotes/${id}`, {
-    method: 'DELETE'
-  })
-  return response
-}
+  return api.delete(`/quotes/${id}`);
+};
 
+// Receipt APIs
 export const getReceipts = async (page = 1, limit = 10, filters = {}) => {
-  const params = new URLSearchParams({ page, limit, ...filters })
-  const response = await apiRequest(`/receipts?${params}`)
-  return response
-}
+  const params = new URLSearchParams({ page, limit, ...filters });
+  return api.get(`/receipts?${params}`);
+};
 
 export const getReceiptById = async (id) => {
-  const response = await apiRequest(`/receipts/${id}`)
-  return response
-}
+  return api.get(`/receipts/${id}`);
+};
 
 export const createReceipt = async (receiptData) => {
-  const response = await apiRequest('/receipts', {
-    method: 'POST',
-    body: JSON.stringify(receiptData)
-  })
-  return response
-}
+  return api.post('/receipts', receiptData);
+};
 
 export const updateReceipt = async (id, receiptData) => {
-  const response = await apiRequest(`/receipts/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(receiptData)
-  })
-  return response
-}
+  return api.put(`/receipts/${id}`, receiptData);
+};
 
 export const deleteReceipt = async (id) => {
-  const response = await apiRequest(`/receipts/${id}`, {
-    method: 'DELETE'
-  })
-  return response
-}
+  return api.delete(`/receipts/${id}`);
+};
 
+// Credit Note APIs
 export const getCreditNotes = async (page = 1, limit = 10) => {
-  const response = await apiRequest(`/credit-notes?page=${page}&limit=${limit}`)
-  return response
-}
+  return api.get(`/credit-notes?page=${page}&limit=${limit}`);
+};
 
+// Audit Log APIs
 export const getAuditLogs = async (page = 1, limit = 50, filters = {}) => {
-  const params = new URLSearchParams({ page, limit, ...filters })
-  const response = await apiRequest(`/audit?${params}`)
-  return response
-}
+  const params = new URLSearchParams({ page, limit, ...filters });
+  return api.get(`/audit?${params}`);
+};
 
 export const getAuditLogById = async (id) => {
-  const response = await apiRequest(`/audit/${id}`)
-  return response
-}
+  return api.get(`/audit/${id}`);
+};
