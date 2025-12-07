@@ -86,6 +86,26 @@ const create = async (req, res, next) => {
     
     const totalAmount = subtotal + taxAmount;
     
+    // Check customer credit limit before creating invoice
+    const customer = await Customer.findByPk(customerId, { transaction: t });
+    if (!customer) {
+      await t.rollback();
+      return res.status(404).json({ error: 'Customer not found' });
+    }
+    
+    if (!customer.canPurchase(totalAmount)) {
+      await t.rollback();
+      return res.status(400).json({ 
+        error: 'Invoice amount exceeds customer credit limit',
+        details: {
+          totalAmount,
+          currentBalance: customer.balance,
+          creditLimit: customer.creditLimit,
+          availableCredit: customer.getAvailableCredit()
+        }
+      });
+    }
+    
     // Generate invoice number (pass transaction to ensure consistency)
     const invoiceNumber = await generateInvoiceNumber(t);
     
@@ -119,11 +139,9 @@ const create = async (req, res, next) => {
     );
     
     // Update customer balance (increase balance as invoice is created)
-    const customer = await Customer.findByPk(customerId, { transaction: t });
-    if (customer) {
-      customer.balance = parseFloat(customer.balance) + totalAmount;
-      await customer.save({ transaction: t });
-    }
+    // customer already fetched above for credit limit check
+    customer.balance = parseFloat(customer.balance) + totalAmount;
+    await customer.save({ transaction: t });
     
     await t.commit();
     
