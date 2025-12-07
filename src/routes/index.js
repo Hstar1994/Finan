@@ -1,31 +1,30 @@
 const express = require('express');
 const router = express.Router();
+const config = require('../config');
 
-// Import module routes
-const authRoutes = require('../modules/auth/routes');
-const userRoutes = require('../modules/users/routes');
-const customerRoutes = require('../modules/customers/routes');
-const itemRoutes = require('../modules/items/routes');
-const invoiceRoutes = require('../modules/invoices/routes');
-const quoteRoutes = require('../modules/quotes/routes');
-const receiptRoutes = require('../modules/receipts/routes');
-const creditNoteRoutes = require('../modules/creditNotes/routes');
-const auditRoutes = require('../modules/audit/routes');
+// Import versioned routes
+const v1Routes = require('./v1');
 
-// Health check endpoint
+// Health check endpoint (unversioned)
 router.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date() });
+  res.json({ 
+    status: 'ok',
+    version: config.app.version || '1.0.0',
+    environment: config.app.env,
+    timestamp: new Date().toISOString()
+  });
 });
 
-// Register routes
-router.use('/auth', authRoutes);
-router.use('/users', userRoutes);
-router.use('/customers', customerRoutes);
-router.use('/items', itemRoutes);
-router.use('/invoices', invoiceRoutes);
-router.use('/quotes', quoteRoutes);
-router.use('/receipts', receiptRoutes);
-router.use('/credit-notes', creditNoteRoutes);
-router.use('/audit', auditRoutes);
+// API v1 routes
+router.use('/v1', v1Routes);
+
+// Default to v1 (for backward compatibility - will be deprecated)
+// Log warning for unversioned API access
+router.use('/', (req, res, next) => {
+  if (!req.path.startsWith('/health')) {
+    console.warn('⚠️ DEPRECATED: Unversioned API access. Please use /api/v1/ instead');
+  }
+  next();
+}, v1Routes);
 
 module.exports = router;
