@@ -14,7 +14,39 @@ const app = express();
 
 // Security middleware
 app.use(helmet());
-app.use(cors());
+
+// CORS configuration - whitelist specific origins
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Parse allowed origins from environment variable or use defaults
+    const whitelist = process.env.CORS_ORIGIN?.split(',') || [
+      'http://localhost:8080',
+      'http://localhost:3000',
+      'http://localhost:5173', // Vite default port
+      'http://127.0.0.1:5173',
+      'http://127.0.0.1:8080',
+      'http://127.0.0.1:3000'
+    ];
+    
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) {
+      return callback(null, true);
+    }
+    
+    if (whitelist.includes(origin)) {
+      callback(null, true);
+    } else {
+      logger.warn(`CORS blocked request from origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true, // Allow cookies and auth headers
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+};
+
+app.use(cors(corsOptions));
 
 // Request logging middleware (before routes)
 app.use(requestLogger);
