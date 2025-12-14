@@ -9,7 +9,10 @@
     "db:migrate": "node src/database/migrate.js",
     "db:seed": "node src/database/seed.js",
     "db:indexes": "node src/database/add-indexes.js",
-    "db:init-sequences": "node src/database/init-sequences.js"
+    "db:init-sequences": "node src/database/init-sequences.js",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "keywords": [
     "finance",
@@ -36,6 +39,8 @@
     "winston": "^3.11.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2"
+    "jest": "^30.2.0",
+    "nodemon": "^3.0.2",
+    "supertest": "^7.1.4"
   }
 }
