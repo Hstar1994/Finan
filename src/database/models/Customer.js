@@ -66,7 +66,8 @@ const Customer = sequelize.define('Customer', {
     defaultValue: true
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  paranoid: true  // Enable soft delete (adds deletedAt column)
 });
 
 // Instance methods
