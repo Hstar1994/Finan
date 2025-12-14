@@ -78,6 +78,39 @@ app.get('/', (req, res) => {
   });
 });
 
+// Health check endpoint for monitoring and load balancers
+app.get('/health', async (req, res) => {
+  try {
+    // Check database connection
+    await testConnection();
+    
+    res.status(200).json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      uptime: Math.floor(process.uptime()),
+      environment: config.app.env,
+      database: 'connected',
+      version: '1.0.0'
+    });
+  } catch (error) {
+    logger.error('Health check failed:', error);
+    res.status(503).json({
+      status: 'unhealthy',
+      timestamp: new Date().toISOString(),
+      database: 'disconnected',
+      error: error.message
+    });
+  }
+});
+
+// Readiness probe for Kubernetes/Docker orchestration
+app.get('/ready', (req, res) => {
+  res.status(200).json({
+    status: 'ready',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Error handling middleware (must be last)
 app.use(errorHandler);
 
