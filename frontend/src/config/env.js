@@ -4,7 +4,7 @@
  */
 
 export const config = {
-  // API Configuration
+  // API Configuration  
   apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
   
   // Application Info
