@@ -3,6 +3,7 @@ const router = express.Router();
 const controller = require('./controller');
 const { authenticate, authorize } = require('../../middleware/auth');
 const auditLogger = require('../../middleware/auditLogger');
+const { validateCreateCustomer, validateUpdateCustomer } = require('../../validators/customer.validator');
 
 /**
  * @swagger
@@ -73,7 +74,7 @@ router.get('/:id', authenticate, controller.getById);
  *       201:
  *         description: Customer created successfully
  */
-router.post('/', authenticate, authorize('admin', 'manager'), auditLogger('CREATE', 'Customer'), controller.create);
+router.post('/', authenticate, authorize('admin', 'manager'), validateCreateCustomer, auditLogger('CREATE', 'Customer'), controller.create);
 
 /**
  * @swagger
@@ -93,7 +94,7 @@ router.post('/', authenticate, authorize('admin', 'manager'), auditLogger('CREAT
  *       200:
  *         description: Customer updated successfully
  */
-router.put('/:id', authenticate, authorize('admin', 'manager'), auditLogger('UPDATE', 'Customer'), controller.update);
+router.put('/:id', authenticate, authorize('admin', 'manager'), validateUpdateCustomer, auditLogger('UPDATE', 'Customer'), controller.update);
 
 /**
  * @swagger

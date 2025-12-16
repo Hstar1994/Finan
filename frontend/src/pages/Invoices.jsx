@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react'
+﻿import React, { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { 
   getInvoices, 
@@ -18,6 +18,9 @@ const Invoices = () => {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0 })
+  
+  // Add ref to track component mount status
+  const isMountedRef = useRef(true)
   
   // Filter state
   const [statusFilter, setStatusFilter] = useState('')
@@ -45,6 +48,13 @@ const Invoices = () => {
   // Form errors
   const [errors, setErrors] = useState({})
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
+
   useEffect(() => {
     loadInvoices()
   }, [pagination.page, statusFilter])
@@ -61,36 +71,51 @@ const Invoices = () => {
       if (statusFilter) filters.status = statusFilter
       
       const data = await getInvoices(pagination.page, pagination.limit, filters)
-      setInvoices(data.invoices || [])
-      if (data.pagination) {
-        setPagination(prev => ({ 
-          ...prev, 
-          total: data.pagination.total,
-          totalPages: data.pagination.totalPages 
-        }))
+      
+      if (isMountedRef.current) {
+        setInvoices(data.invoices || [])
+        if (data.pagination) {
+          setPagination(prev => ({ 
+            ...prev, 
+            total: data.pagination.total,
+            totalPages: data.pagination.totalPages 
+          }))
+        }
       }
     } catch (err) {
-      showAlert('error', err.message || 'Failed to load invoices')
+      if (isMountedRef.current) {
+        showAlert('error', err.message || 'Failed to load invoices')
+      }
     } finally {
-      setLoading(false)
+      if (isMountedRef.current) {
+        setLoading(false)
+      }
     }
   }
 
   const loadCustomers = async () => {
     try {
       const data = await getCustomers(1, 1000, { isActive: true })
-      setCustomers(data.customers || [])
+      if (isMountedRef.current) {
+        setCustomers(data.customers || [])
+      }
     } catch (err) {
-      console.error('Failed to load customers:', err)
+      if (isMountedRef.current) {
+        console.error('Failed to load customers:', err)
+      }
     }
   }
 
   const loadItems = async () => {
     try {
       const data = await getItems(1, 1000, { isActive: true })
-      setItems(data.items || [])
+      if (isMountedRef.current) {
+        setItems(data.items || [])
+      }
     } catch (err) {
-      console.error('Failed to load items:', err)
+      if (isMountedRef.current) {
+        console.error('Failed to load items:', err)
+      }
     }
   }
 

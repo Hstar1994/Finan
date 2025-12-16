@@ -38,7 +38,8 @@ const Item = sequelize.define('Item', {
     defaultValue: true
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  paranoid: true  // Enable soft delete (adds deletedAt column)
 });
 
 module.exports = Item;

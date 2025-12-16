@@ -7,12 +7,49 @@ const { testConnection } = require('./database/connection');
 const routes = require('./routes');
 const errorHandler = require('./middleware/errorHandler');
 const { specs, swaggerUi } = require('./config/swagger');
+const requestLogger = require('./middleware/requestLogger');
+const logger = require('./utils/logger');
 
 const app = express();
 
 // Security middleware
 app.use(helmet());
-app.use(cors());
+
+// CORS configuration - whitelist specific origins
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Parse allowed origins from environment variable or use defaults
+    const whitelist = process.env.CORS_ORIGIN?.split(',') || [
+      'http://localhost:8080',
+      'http://localhost:3000',
+      'http://localhost:5173', // Vite default port
+      'http://127.0.0.1:5173',
+      'http://127.0.0.1:8080',
+      'http://127.0.0.1:3000'
+    ];
+    
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) {
+      return callback(null, true);
+    }
+    
+    if (whitelist.includes(origin)) {
+      callback(null, true);
+    } else {
+      logger.warn(`CORS blocked request from origin: ${origin}`);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true, // Allow cookies and auth headers
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+};
+
+app.use(cors(corsOptions));
+
+// Request logging middleware (before routes)
+app.use(requestLogger);
 
 // Rate limiting
 const limiter = rateLimit({
@@ -41,6 +78,39 @@ app.get('/', (req, res) => {
   });
 });
 
+// Health check endpoint for monitoring and load balancers
+app.get('/health', async (req, res) => {
+  try {
+    // Check database connection
+    await testConnection();
+    
+    res.status(200).json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      uptime: Math.floor(process.uptime()),
+      environment: config.app.env,
+      database: 'connected',
+      version: '1.0.0'
+    });
+  } catch (error) {
+    logger.error('Health check failed:', error);
+    res.status(503).json({
+      status: 'unhealthy',
+      timestamp: new Date().toISOString(),
+      database: 'disconnected',
+      error: error.message
+    });
+  }
+});
+
+// Readiness probe for Kubernetes/Docker orchestration
+app.get('/ready', (req, res) => {
+  res.status(200).json({
+    status: 'ready',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Error handling middleware (must be last)
 app.use(errorHandler);
 
@@ -51,13 +121,13 @@ const startServer = async () => {
     const dbConnected = await testConnection();
     
     if (!dbConnected) {
-      console.error('Failed to connect to database. Please check your configuration.');
+      logger.error('Failed to connect to database. Please check your configuration.');
       process.exit(1);
     }
     
     // Start listening
     app.listen(config.app.port, () => {
-      console.log(`
+      const startupMessage = `
 ╔═══════════════════════════════════════════════════════╗
 ║                    Finan API Server                   ║
 ╟───────────────────────────────────────────────────────╢
@@ -65,17 +135,22 @@ const startServer = async () => {
 ║  Port:        ${String(config.app.port).padEnd(39)}║
 ║  API Docs:    http://localhost:${config.app.port}/api-docs${' '.repeat(9)}║
 ╚═══════════════════════════════════════════════════════╝
-      `);
+      `;
+      console.log(startupMessage);
+      logger.info('Server started successfully', {
+        environment: config.app.env,
+        port: config.app.port,
+      });
     });
   } catch (error) {
-    console.error('Failed to start server:', error);
+    logger.error('Failed to start server:', error);
     process.exit(1);
   }
 };
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
-  console.error('Unhandled Promise Rejection:', err);
+  logger.error('Unhandled Promise Rejection:', err);
   process.exit(1);
 });
 

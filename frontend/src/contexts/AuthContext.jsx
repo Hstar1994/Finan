@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import config from '../config/env'
 
 const AuthContext = createContext()
 
@@ -17,22 +18,62 @@ export const AuthProvider = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true)
   const navigate = useNavigate()
 
-  // Initialize auth state from storage
-  useEffect(() => {
-    const storedToken = localStorage.getItem('token') || sessionStorage.getItem('token')
-    const storedUser = localStorage.getItem('user') || sessionStorage.getItem('user')
-    
-    if (storedToken && storedUser) {
-      setToken(storedToken)
-      setUser(JSON.parse(storedUser))
+  // Validate token and fetch user profile
+  const validateToken = async (authToken) => {
+    try {
+      const response = await fetch(`${config.apiUrl}/auth/profile`, {
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('Token validation failed')
+      }
+
+      const data = await response.json()
+      return data.success ? data.data.user : null
+    } catch (error) {
+      console.error('Token validation error:', error)
+      return null
     }
-    
-    setIsLoading(false)
+  }
+
+  // Initialize auth state from storage and validate token
+  useEffect(() => {
+    const initAuth = async () => {
+      const storedToken = localStorage.getItem('token') || sessionStorage.getItem('token')
+      
+      if (storedToken) {
+        // Validate token with backend
+        const validatedUser = await validateToken(storedToken)
+        
+        if (validatedUser) {
+          setToken(storedToken)
+          setUser(validatedUser)
+          
+          // Update stored user data with validated info
+          const storage = localStorage.getItem('token') ? localStorage : sessionStorage
+          storage.setItem('user', JSON.stringify(validatedUser))
+        } else {
+          // Token is invalid, clear storage
+          localStorage.removeItem('token')
+          localStorage.removeItem('user')
+          sessionStorage.removeItem('token')
+          sessionStorage.removeItem('user')
+        }
+      }
+      
+      setIsLoading(false)
+    }
+
+    initAuth()
   }, [])
 
   const login = async (email, password, rememberMe = false) => {
     try {
-      const response = await fetch('http://localhost:3000/api/auth/login', {
+      const response = await fetch(`${config.apiUrl}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -43,18 +84,18 @@ export const AuthProvider = ({ children }) => {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Login failed')
+        throw new Error(data.message || data.error || 'Login failed')
       }
 
       // Store token and user
       const storage = rememberMe ? localStorage : sessionStorage
-      storage.setItem('token', data.token)
-      storage.setItem('user', JSON.stringify(data.user))
+      storage.setItem('token', data.data.token)
+      storage.setItem('user', JSON.stringify(data.data.user))
 
-      setToken(data.token)
-      setUser(data.user)
+      setToken(data.data.token)
+      setUser(data.data.user)
 
-      return { success: true, user: data.user }
+      return { success: true, user: data.data.user }
     } catch (error) {
       console.error('Login error:', error)
       return { success: false, error: error.message }

@@ -3,6 +3,7 @@ const router = express.Router();
 const userController = require('./controller');
 const { authenticate } = require('../../middleware/auth');
 const { requireAdmin, requireManagerOrAdmin } = require('../../middleware/permissions');
+const { validateCreateUser, validateUpdateUser } = require('../../validators/user.validator');
 
 /**
  * @swagger
@@ -116,7 +117,7 @@ router.get('/:id', authenticate, requireManagerOrAdmin, userController.getUserBy
  *       201:
  *         description: User created successfully
  */
-router.post('/', authenticate, requireAdmin, userController.createUser);
+router.post('/', authenticate, requireAdmin, validateCreateUser, userController.createUser);
 
 /**
  * @swagger
@@ -156,7 +157,7 @@ router.post('/', authenticate, requireAdmin, userController.createUser);
  *       404:
  *         description: User not found
  */
-router.put('/:id', authenticate, requireAdmin, userController.updateUser);
+router.put('/:id', authenticate, requireAdmin, validateUpdateUser, userController.updateUser);
 
 /**
  * @swagger

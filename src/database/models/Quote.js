@@ -64,7 +64,8 @@ const Quote = sequelize.define('Quote', {
     }
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  paranoid: true  // Enable soft delete (adds deletedAt column)
 });
 
 module.exports = Quote;

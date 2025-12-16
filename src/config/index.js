@@ -14,10 +14,16 @@ module.exports = {
     dialect: 'postgres',
     logging: process.env.NODE_ENV === 'development' ? console.log : false,
     pool: {
-      max: 5,
-      min: 0,
+      // Max connections: Higher in production for better concurrency
+      max: parseInt(process.env.DB_POOL_MAX) || (process.env.NODE_ENV === 'production' ? 20 : 5),
+      // Min connections: Maintain warm connections to avoid cold starts
+      min: parseInt(process.env.DB_POOL_MIN) || 2,
+      // Time to wait for connection before throwing error
       acquire: 30000,
-      idle: 10000
+      // Time a connection can be idle before being released
+      idle: 10000,
+      // Check for idle connections every second
+      evict: 1000
     }
   },
   jwt: {

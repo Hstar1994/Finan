@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react'
+﻿import React, { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { getUsers, createUser, updateUser, deleteUser } from '../utils/api'
 import './Users.css'
@@ -13,6 +13,9 @@ const Users = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [roleFilter, setRoleFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
+  
+  // Add ref to track component mount status
+  const isMountedRef = useRef(true)
   
   // Modal states
   const [showModal, setShowModal] = useState(false)
@@ -31,6 +34,13 @@ const Users = () => {
     isActive: true
   })
   const [formErrors, setFormErrors] = useState({})
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
 
   useEffect(() => {
     if (currentUser?.role === 'admin') {
@@ -51,12 +61,19 @@ const Users = () => {
       if (statusFilter) filters.isActive = statusFilter
       
       const data = await getUsers(pagination.page, pagination.limit, filters)
-      setUsers(data.data || [])
-      setPagination(prev => ({ ...prev, total: data.pagination?.total || 0 }))
+      
+      if (isMountedRef.current) {
+        setUsers(data.data || [])
+        setPagination(prev => ({ ...prev, total: data.pagination?.total || 0 }))
+      }
     } catch (err) {
-      setError(err.message || 'Failed to load users')
+      if (isMountedRef.current) {
+        setError(err.message || 'Failed to load users')
+      }
     } finally {
-      setLoading(false)
+      if (isMountedRef.current) {
+        setLoading(false)
+      }
     }
   }
 

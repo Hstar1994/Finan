@@ -1,10 +1,7 @@
 const { Invoice, InvoiceItem, Customer, Item } = require('../../database/models');
+const { sequelize } = require('../../database/connection');
 const { Op } = require('sequelize');
-
-const generateInvoiceNumber = async () => {
-  const count = await Invoice.count();
-  return `INV-${String(count + 1).padStart(6, '0')}`;
-};
+const { generateInvoiceNumber } = require('../../utils/numberGenerator');
 
 const getAll = async (req, res, next) => {
   try {
@@ -66,10 +63,13 @@ const getById = async (req, res, next) => {
 };
 
 const create = async (req, res, next) => {
+  const t = await sequelize.transaction();
+  
   try {
     const { customerId, dueDate, items, notes, terms } = req.body;
     
     if (!customerId || !dueDate || !items || items.length === 0) {
+      await t.rollback();
       return res.status(400).json({ error: 'Customer, due date, and items are required' });
     }
     
@@ -86,8 +86,28 @@ const create = async (req, res, next) => {
     
     const totalAmount = subtotal + taxAmount;
     
-    // Generate invoice number
-    const invoiceNumber = await generateInvoiceNumber();
+    // Check customer credit limit before creating invoice
+    const customer = await Customer.findByPk(customerId, { transaction: t });
+    if (!customer) {
+      await t.rollback();
+      return res.status(404).json({ error: 'Customer not found' });
+    }
+    
+    if (!customer.canPurchase(totalAmount)) {
+      await t.rollback();
+      return res.status(400).json({ 
+        error: 'Invoice amount exceeds customer credit limit',
+        details: {
+          totalAmount,
+          currentBalance: customer.balance,
+          creditLimit: customer.creditLimit,
+          availableCredit: customer.getAvailableCredit()
+        }
+      });
+    }
+    
+    // Generate invoice number (pass transaction to ensure consistency)
+    const invoiceNumber = await generateInvoiceNumber(t);
     
     // Create invoice
     const invoice = await Invoice.create({
@@ -101,7 +121,7 @@ const create = async (req, res, next) => {
       notes,
       terms,
       createdBy: req.user.id
-    });
+    }, { transaction: t });
     
     // Create invoice items
     const invoiceItems = await Promise.all(
@@ -114,9 +134,16 @@ const create = async (req, res, next) => {
           unitPrice: item.unitPrice,
           taxRate: item.taxRate || 0,
           amount: parseFloat(item.quantity) * parseFloat(item.unitPrice)
-        })
+        }, { transaction: t })
       )
     );
+    
+    // Update customer balance (increase balance as invoice is created)
+    // customer already fetched above for credit limit check
+    customer.balance = parseFloat(customer.balance) + totalAmount;
+    await customer.save({ transaction: t });
+    
+    await t.commit();
     
     res.status(201).json({ 
       message: 'Invoice created successfully', 
@@ -126,30 +153,36 @@ const create = async (req, res, next) => {
       }
     });
   } catch (error) {
+    await t.rollback();
     next(error);
   }
 };
 
 const update = async (req, res, next) => {
+  const t = await sequelize.transaction();
+  
   try {
-    const invoice = await Invoice.findByPk(req.params.id);
+    const invoice = await Invoice.findByPk(req.params.id, { transaction: t });
     
     if (!invoice) {
+      await t.rollback();
       return res.status(404).json({ error: 'Invoice not found' });
     }
     
     const { status, dueDate, notes, terms, items } = req.body;
     
+    const oldTotalAmount = parseFloat(invoice.totalAmount);
+    
     // Update invoice fields
     if (status) invoice.status = status;
     if (dueDate) invoice.dueDate = dueDate;
-    if (notes) invoice.notes = notes;
-    if (terms) invoice.terms = terms;
+    if (notes !== undefined) invoice.notes = notes;
+    if (terms !== undefined) invoice.terms = terms;
     
     // If items are provided, recalculate totals
     if (items && items.length > 0) {
       // Delete existing items
-      await InvoiceItem.destroy({ where: { invoiceId: invoice.id } });
+      await InvoiceItem.destroy({ where: { invoiceId: invoice.id }, transaction: t });
       
       // Calculate new totals
       let subtotal = 0;
@@ -177,30 +210,66 @@ const update = async (req, res, next) => {
             unitPrice: item.unitPrice,
             taxRate: item.taxRate || 0,
             amount: parseFloat(item.quantity) * parseFloat(item.unitPrice)
-          })
+          }, { transaction: t })
         )
       );
+      
+      // Update customer balance if total amount changed
+      const newTotalAmount = parseFloat(invoice.totalAmount);
+      if (newTotalAmount !== oldTotalAmount) {
+        const customer = await Customer.findByPk(invoice.customerId, { transaction: t });
+        if (customer) {
+          const balanceDifference = newTotalAmount - oldTotalAmount;
+          customer.balance = parseFloat(customer.balance) + balanceDifference;
+          await customer.save({ transaction: t });
+        }
+      }
     }
     
-    await invoice.save();
+    await invoice.save({ transaction: t });
+    await t.commit();
     
     res.json({ message: 'Invoice updated successfully', invoice });
   } catch (error) {
+    await t.rollback();
     next(error);
   }
 };
 
 const remove = async (req, res, next) => {
+  const t = await sequelize.transaction();
+  
   try {
-    const invoice = await Invoice.findByPk(req.params.id);
+    const invoice = await Invoice.findByPk(req.params.id, { transaction: t });
     
     if (!invoice) {
+      await t.rollback();
       return res.status(404).json({ error: 'Invoice not found' });
     }
     
-    await invoice.destroy();
+    // Check if invoice has payments
+    if (parseFloat(invoice.amountPaid) > 0) {
+      await t.rollback();
+      return res.status(400).json({ 
+        error: 'Cannot delete invoice with payments. Please delete associated receipts first.' 
+      });
+    }
+    
+    const invoiceTotalAmount = parseFloat(invoice.totalAmount);
+    
+    // Update customer balance (decrease balance as invoice is removed)
+    const customer = await Customer.findByPk(invoice.customerId, { transaction: t });
+    if (customer) {
+      customer.balance = parseFloat(customer.balance) - invoiceTotalAmount;
+      await customer.save({ transaction: t });
+    }
+    
+    await invoice.destroy({ transaction: t });
+    await t.commit();
+    
     res.json({ message: 'Invoice deleted successfully' });
   } catch (error) {
+    await t.rollback();
     next(error);
   }
 };
