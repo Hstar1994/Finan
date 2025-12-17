@@ -71,6 +71,7 @@ export const getMenuForRole = (role) => {
       menuConfig.shared[3], // Quotes
       menuConfig.shared[4], // Invoices
       menuConfig.shared[5], // Receipts
+      menuConfig.shared[6], // Chat
       menuConfig.admin[1]   // Audit Logs
     ],
     manager: [...menuConfig.manager, ...menuConfig.shared],
