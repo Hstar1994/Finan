@@ -76,7 +76,6 @@ const Customer = sequelize.define('Customer', {
   authEmail: {
     type: DataTypes.STRING(255),
     allowNull: true,
-    unique: true,
     validate: {
       isEmail: true
     },
@@ -121,7 +120,6 @@ const Customer = sequelize.define('Customer', {
   authPhone: {
     type: DataTypes.STRING(32),
     allowNull: true,
-    unique: true,
     comment: 'Phone number for customer authentication'
   },
   emailVerifiedAt: {

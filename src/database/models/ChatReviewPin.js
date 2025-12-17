@@ -30,13 +30,11 @@ const ChatReviewPin = sequelize.define('ChatReviewPin', {
   },
   matchedEntityType: {
     type: DataTypes.ENUM('CUSTOMER', 'USER'),
-    allowNull: false,
-    comment: 'Type of entity mentioned (customer or staff user)'
+    allowNull: false
   },
   matchedEntityId: {
     type: DataTypes.UUID,
-    allowNull: false,
-    comment: 'ID of the mentioned customer or user'
+    allowNull: false
   },
   status: {
     type: DataTypes.ENUM('OPEN', 'RESOLVED'),

@@ -19,13 +19,11 @@ const ChatReviewPinLink = sequelize.define('ChatReviewPinLink', {
   },
   linkType: {
     type: DataTypes.ENUM('INVOICE', 'QUOTE', 'RECEIPT'),
-    allowNull: false,
-    comment: 'Type of document linked to the pin'
+    allowNull: false
   },
   documentId: {
     type: DataTypes.UUID,
-    allowNull: false,
-    comment: 'ID of the linked invoice, quote, or receipt'
+    allowNull: false
   },
   addedByUserId: {
     type: DataTypes.UUID,
