@@ -21,13 +21,13 @@
     {
       id: 'quotes',
       label: 'Quotes',
-      icon: '�',
+      icon: '📋',
       path: '/quotes'
     },
     {
       id: 'invoices',
       label: 'Invoices',
-      icon: '�',
+      icon: '📄',
       path: '/invoices'
     },
     {
@@ -35,6 +35,12 @@
       label: 'Receipts',
       icon: '💰',
       path: '/receipts'
+    },
+    {
+      id: 'chat',
+      label: 'Chat',
+      icon: '💬',
+      path: '/chat'
     }
   ],
   user: [],

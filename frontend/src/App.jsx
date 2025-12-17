@@ -13,6 +13,7 @@ import Quotes from './pages/Quotes'
 import Receipts from './pages/Receipts'
 import Users from './pages/Users'
 import AuditLogs from './pages/AuditLogs'
+import Chat from './pages/Chat'
 
 function App() {
   return (
@@ -40,6 +41,7 @@ function App() {
                       <Route path="/invoices" element={<Invoices />} />
                       <Route path="/quotes" element={<Quotes />} />
                       <Route path="/receipts" element={<Receipts />} />
+                      <Route path="/chat" element={<Chat />} />
                       <Route path="/users" element={<Users />} />
                       <Route 
                         path="/audit-logs" 
