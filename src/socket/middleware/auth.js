@@ -41,9 +41,19 @@ const authenticateSocket = async (socket, next) => {
     } else {
       // Staff authentication (uses 'id' in token, not 'userId')
       const userId = decoded.userId || decoded.id;
+      
+      // Debug logging
+      console.log('🔍 Socket.IO Auth Debug:', {
+        decodedKeys: Object.keys(decoded),
+        userId,
+        hasId: !!decoded.id,
+        hasUserId: !!decoded.userId
+      });
+      
       const user = await User.findByPk(userId);
       
       if (!user) {
+        console.log('❌ User not found in database:', userId);
         return next(new Error('User not found'));
       }
 

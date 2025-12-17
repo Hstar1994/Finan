@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import config from '../config/env'
 import io from 'socket.io-client'
+import NewConversationModal from '../components/NewConversationModal'
 import './Chat.css'
 
 const Chat = () => {
@@ -16,6 +17,7 @@ const Chat = () => {
   const [isSending, setIsSending] = useState(false)
   const [error, setError] = useState(null)
   const [typingUsers, setTypingUsers] = useState(new Set())
+  const [showNewConversation, setShowNewConversation] = useState(false)
   const messagesEndRef = useRef(null)
   const typingTimeoutRef = useRef(null)
 
@@ -271,11 +273,32 @@ const Chat = () => {
     return 'Conversation'
   }
 
+  const handleConversationCreated = (newConversation) => {
+    setConversations(prev => [newConversation, ...prev])
+    setSelectedConversation(newConversation)
+    setShowNewConversation(false)
+  }
+
   return (
     <div className="chat-container">
+      {/* New Conversation Modal */}
+      {showNewConversation && (
+        <NewConversationModal
+          onClose={() => setShowNewConversation(false)}
+          onConversationCreated={handleConversationCreated}
+        />
+      )}
+
       <div className="chat-sidebar">
         <div className="chat-sidebar-header">
           <h2>💬 Conversations</h2>
+          <button
+            className="new-conversation-btn"
+            onClick={() => setShowNewConversation(true)}
+            title="New Conversation"
+          >
+            ➕
+          </button>
         </div>
         
         {error && (
