@@ -13,6 +13,13 @@ const CreditNote = require('./CreditNote');
 const CreditNoteItem = require('./CreditNoteItem');
 const AuditLog = require('./AuditLog');
 
+// Chat models
+const ChatConversation = require('./ChatConversation');
+const ChatParticipant = require('./ChatParticipant');
+const ChatMessage = require('./ChatMessage');
+const ChatReviewPin = require('./ChatReviewPin');
+const ChatReviewPinLink = require('./ChatReviewPinLink');
+
 // Define relationships
 
 // Customer relationships (RESTRICT deletion if related records exist)
@@ -153,6 +160,189 @@ AuditLog.belongsTo(User, {
   onUpdate: 'CASCADE'
 });
 
+// Chat relationships
+
+// ChatConversation relationships
+ChatConversation.belongsTo(Customer, {
+  foreignKey: 'customerId',
+  as: 'customer',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
+});
+Customer.hasMany(ChatConversation, {
+  foreignKey: 'customerId',
+  as: 'chatConversations',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
+});
+
+ChatConversation.belongsTo(User, {
+  foreignKey: 'createdByUserId',
+  as: 'creator',
+  onDelete: 'SET NULL',
+  onUpdate: 'CASCADE'
+});
+User.hasMany(ChatConversation, {
+  foreignKey: 'createdByUserId',
+  as: 'createdConversations',
+  onDelete: 'SET NULL',
+  onUpdate: 'CASCADE'
+});
+
+ChatConversation.hasMany(ChatParticipant, {
+  foreignKey: 'conversationId',
+  as: 'participants',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
+});
+
+ChatConversation.hasMany(ChatMessage, {
+  foreignKey: 'conversationId',
+  as: 'messages',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
+});
+
+ChatConversation.hasMany(ChatReviewPin, {
+  foreignKey: 'conversationId',
+  as: 'reviewPins',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
+});
+
+// ChatParticipant relationships
+ChatParticipant.belongsTo(ChatConversation, {
+  foreignKey: 'conversationId',
+  as: 'conversation',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
+});
+
+ChatParticipant.belongsTo(User, {
+  foreignKey: 'userId',
+  as: 'user',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
+});
+User.hasMany(ChatParticipant, {
+  foreignKey: 'userId',
+  as: 'chatParticipations',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
+});
+
+ChatParticipant.belongsTo(Customer, {
+  foreignKey: 'customerId',
+  as: 'customer',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
+});
+Customer.hasMany(ChatParticipant, {
+  foreignKey: 'customerId',
+  as: 'chatParticipations',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
+});
+
+ChatParticipant.belongsTo(ChatMessage, {
+  foreignKey: 'lastReadMessageId',
+  as: 'lastReadMessage',
+  onDelete: 'SET NULL',
+  onUpdate: 'CASCADE'
+});
+
+// ChatMessage relationships
+ChatMessage.belongsTo(ChatConversation, {
+  foreignKey: 'conversationId',
+  as: 'conversation',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
+});
+
+ChatMessage.belongsTo(User, {
+  foreignKey: 'senderUserId',
+  as: 'senderUser',
+  onDelete: 'SET NULL',
+  onUpdate: 'CASCADE'
+});
+User.hasMany(ChatMessage, {
+  foreignKey: 'senderUserId',
+  as: 'sentMessages',
+  onDelete: 'SET NULL',
+  onUpdate: 'CASCADE'
+});
+
+ChatMessage.belongsTo(Customer, {
+  foreignKey: 'senderCustomerId',
+  as: 'senderCustomer',
+  onDelete: 'SET NULL',
+  onUpdate: 'CASCADE'
+});
+Customer.hasMany(ChatMessage, {
+  foreignKey: 'senderCustomerId',
+  as: 'sentMessages',
+  onDelete: 'SET NULL',
+  onUpdate: 'CASCADE'
+});
+
+ChatMessage.hasMany(ChatReviewPin, {
+  foreignKey: 'sourceMessageId',
+  as: 'reviewPins',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
+});
+
+// ChatReviewPin relationships
+ChatReviewPin.belongsTo(ChatConversation, {
+  foreignKey: 'conversationId',
+  as: 'conversation',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
+});
+
+ChatReviewPin.belongsTo(ChatMessage, {
+  foreignKey: 'sourceMessageId',
+  as: 'sourceMessage',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
+});
+
+ChatReviewPin.belongsTo(User, {
+  foreignKey: 'createdByUserId',
+  as: 'creator',
+  onDelete: 'SET NULL',
+  onUpdate: 'CASCADE'
+});
+
+ChatReviewPin.belongsTo(User, {
+  foreignKey: 'resolvedByUserId',
+  as: 'resolver',
+  onDelete: 'SET NULL',
+  onUpdate: 'CASCADE'
+});
+
+ChatReviewPin.hasMany(ChatReviewPinLink, {
+  foreignKey: 'pinId',
+  as: 'links',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
+});
+
+// ChatReviewPinLink relationships
+ChatReviewPinLink.belongsTo(ChatReviewPin, {
+  foreignKey: 'pinId',
+  as: 'pin',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
+});
+
+ChatReviewPinLink.belongsTo(User, {
+  foreignKey: 'addedByUserId',
+  as: 'addedBy',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE'
+});
+
 // Export models
 module.exports = {
   sequelize,
@@ -166,5 +356,10 @@ module.exports = {
   Receipt,
   CreditNote,
   CreditNoteItem,
-  AuditLog
+  AuditLog,
+  ChatConversation,
+  ChatParticipant,
+  ChatMessage,
+  ChatReviewPin,
+  ChatReviewPinLink
 };
