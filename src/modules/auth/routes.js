@@ -1,7 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const controller = require('./controller');
+const customerAuthController = require('./customerAuth.controller');
 const { authenticate, authorize } = require('../../middleware/auth');
+const { authenticateChatUser } = require('../../middleware/chatAuth');
 const auditLogger = require('../../middleware/auditLogger');
 const { loginLimiter, strictLimiter } = require('../../middleware/rateLimiter');
 const { validateLogin, validateRegister, validateChangePassword } = require('../../validators/auth.validator');
@@ -185,5 +187,160 @@ router.post('/reset-password', strictLimiter, authenticate, authorize('admin'), 
  *         description: Token refreshed successfully
  */
 router.post('/refresh', authenticate, controller.refreshToken);
+
+// ========== Customer Authentication Routes ==========
+
+/**
+ * @swagger
+ * /api/auth/customer/register:
+ *   post:
+ *     summary: Register a new customer with authentication
+ *     tags: [Customer Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - authEmail
+ *               - password
+ *             properties:
+ *               name:
+ *                 type: string
+ *               authEmail:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Customer registered successfully
+ */
+router.post('/customer/register', customerAuthController.register);
+
+/**
+ * @swagger
+ * /api/auth/customer/login:
+ *   post:
+ *     summary: Login as customer
+ *     tags: [Customer Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - authEmail
+ *               - password
+ *             properties:
+ *               authEmail:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ */
+router.post('/customer/login', loginLimiter, customerAuthController.login);
+
+/**
+ * @swagger
+ * /api/auth/customer/profile:
+ *   get:
+ *     summary: Get customer profile
+ *     tags: [Customer Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Customer profile
+ */
+router.get('/customer/profile', authenticateChatUser, customerAuthController.getProfile);
+
+/**
+ * @swagger
+ * /api/auth/customer/change-password:
+ *   post:
+ *     summary: Change customer password
+ *     tags: [Customer Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - currentPassword
+ *               - newPassword
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Password changed successfully
+ */
+router.post('/customer/change-password', strictLimiter, authenticateChatUser, customerAuthController.changePassword);
+
+/**
+ * @swagger
+ * /api/auth/customer/forgot-password:
+ *   post:
+ *     summary: Request password reset
+ *     tags: [Customer Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - authEmail
+ *             properties:
+ *               authEmail:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Reset link sent if email exists
+ */
+router.post('/customer/forgot-password', strictLimiter, customerAuthController.requestPasswordReset);
+
+/**
+ * @swagger
+ * /api/auth/customer/reset-password:
+ *   post:
+ *     summary: Reset password using token
+ *     tags: [Customer Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - authEmail
+ *               - resetToken
+ *               - newPassword
+ *             properties:
+ *               authEmail:
+ *                 type: string
+ *               resetToken:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Password reset successfully
+ */
+router.post('/customer/reset-password', strictLimiter, customerAuthController.resetPassword);
 
 module.exports = router;

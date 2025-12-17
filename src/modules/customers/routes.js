@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const controller = require('./controller');
+const customerAuthController = require('../auth/customerAuth.controller');
 const { authenticate, authorize } = require('../../middleware/auth');
 const auditLogger = require('../../middleware/auditLogger');
 const { validateCreateCustomer, validateUpdateCustomer } = require('../../validators/customer.validator');
@@ -147,5 +148,59 @@ router.delete('/:id', authenticate, authorize('admin'), auditLogger('DELETE', 'C
  *         description: Balance updated successfully
  */
 router.patch('/:id/balance', authenticate, authorize('admin', 'manager'), auditLogger('UPDATE', 'Customer'), controller.updateBalance);
+
+/**
+ * @swagger
+ * /api/customers/{id}/enable-auth:
+ *   post:
+ *     summary: Enable customer authentication
+ *     tags: [Customers]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - authEmail
+ *               - password
+ *             properties:
+ *               authEmail:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Customer authentication enabled
+ */
+router.post('/:customerId/enable-auth', authenticate, authorize('admin', 'manager'), auditLogger('UPDATE', 'Customer'), customerAuthController.enableAuth);
+
+/**
+ * @swagger
+ * /api/customers/{id}/disable-auth:
+ *   post:
+ *     summary: Disable customer authentication
+ *     tags: [Customers]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Customer authentication disabled
+ */
+router.post('/:customerId/disable-auth', authenticate, authorize('admin', 'manager'), auditLogger('UPDATE', 'Customer'), customerAuthController.disableAuth);
 
 module.exports = router;

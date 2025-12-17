@@ -4,6 +4,7 @@ const router = express.Router();
 // Import module routes
 const authRoutes = require('../../modules/auth/routes');
 const auditRoutes = require('../../modules/audit/routes');
+const chatRoutes = require('../../modules/chat/routes');
 const creditNoteRoutes = require('../../modules/creditNotes/routes');
 const customerRoutes = require('../../modules/customers/routes');
 const invoiceRoutes = require('../../modules/invoices/routes');
@@ -15,6 +16,7 @@ const userRoutes = require('../../modules/users/routes');
 // Register v1 routes
 router.use('/auth', authRoutes);
 router.use('/audit', auditRoutes);
+router.use('/chat', chatRoutes);
 router.use('/credit-notes', creditNoteRoutes);
 router.use('/customers', customerRoutes);
 router.use('/invoices', invoiceRoutes);

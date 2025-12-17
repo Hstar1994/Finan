@@ -62,8 +62,59 @@ const strictLimiter = rateLimit({
   }
 });
 
+/**
+ * Chat rate limiter - per conversation per actor
+ * Limits: 60 messages per minute per conversation per actor
+ */
+const chatRateLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 60, // 60 messages per minute per conversation
+  keyGenerator: (req) => {
+    const actorId = req.userId || req.customerId;
+    const conversationId = req.params.id;
+    return `chat:conv:${conversationId}:actor:${actorId}`;
+  },
+  message: {
+    error: 'Too many messages to this conversation, please slow down'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).json({
+      error: 'Too many messages to this conversation, please slow down',
+      retryAfter: Math.ceil(req.rateLimit.resetTime / 1000)
+    });
+  }
+});
+
+/**
+ * Global chat rate limiter - per actor across all conversations
+ * Limits: 100 messages per minute globally per actor
+ */
+const globalChatRateLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 100, // 100 messages per minute globally
+  keyGenerator: (req) => {
+    const actorId = req.userId || req.customerId;
+    return `chat:global:actor:${actorId}`;
+  },
+  message: {
+    error: 'Too many messages sent, please slow down'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).json({
+      error: 'Too many messages sent, please slow down',
+      retryAfter: Math.ceil(req.rateLimit.resetTime / 1000)
+    });
+  }
+});
+
 module.exports = {
   loginLimiter,
   apiLimiter,
-  strictLimiter
+  strictLimiter,
+  chatRateLimiter,
+  globalChatRateLimiter
 };
