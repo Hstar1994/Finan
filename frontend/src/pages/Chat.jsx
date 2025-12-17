@@ -24,19 +24,32 @@ const Chat = () => {
     if (!token) return
 
     const socketUrl = config.apiUrl.replace('/api', '').replace('/v1', '')
+    console.log('Initializing Socket.IO connection to:', socketUrl)
+    console.log('Using token:', token ? 'Token present' : 'No token')
+    
     const newSocket = io(socketUrl, {
       auth: { token },
       transports: ['websocket', 'polling']
     })
 
     newSocket.on('connect', () => {
-      console.log('Socket.IO connected:', newSocket.id)
+      console.log('✅ Socket.IO connected successfully:', newSocket.id)
       setError(null)
     })
 
     newSocket.on('connect_error', (err) => {
-      console.error('Socket.IO connection error:', err)
-      setError('Unable to connect to chat server')
+      console.error('❌ Socket.IO connection error:', err)
+      console.error('Error message:', err.message)
+      console.error('Error description:', err.description)
+      setError('Unable to connect to chat server. Please check your connection.')
+    })
+
+    newSocket.on('disconnect', (reason) => {
+      console.log('Socket.IO disconnected:', reason)
+      if (reason === 'io server disconnect') {
+        // Server disconnected, try to reconnect
+        newSocket.connect()
+      }
     })
 
     newSocket.on('new_message', (data) => {

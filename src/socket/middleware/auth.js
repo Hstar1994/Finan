@@ -39,14 +39,15 @@ const authenticateSocket = async (socket, next) => {
       socket.userId = null;
       socket.userRole = null;
     } else {
-      // Staff authentication
-      const user = await User.findByPk(decoded.userId);
+      // Staff authentication (uses 'id' in token, not 'userId')
+      const userId = decoded.userId || decoded.id;
+      const user = await User.findByPk(userId);
       
       if (!user) {
         return next(new Error('User not found'));
       }
 
-      if (user.status !== 'active') {
+      if (user.isActive === false) {
         return next(new Error('User account is not active'));
       }
 
