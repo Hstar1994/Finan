@@ -1,6 +1,6 @@
 const chatService = require('./chat.service');
 const ApiResponse = require('../../utils/apiResponse');
-const { auditLog } = require('../audit/audit.service');
+const { AuditLog } = require('../../database/models');
 
 class ChatController {
   /**
@@ -26,14 +26,13 @@ class ChatController {
       });
       
       // Audit log
-      await auditLog(
-        'chat.conversation.created',
-        'ChatConversation',
-        conversation.id,
-        req.userId,
-        null,
-        { type, customerId, title }
-      );
+      await AuditLog.create({
+        userId: req.userId,
+        action: 'chat.conversation.created',
+        entity: 'ChatConversation',
+        entityId: conversation.id,
+        changes: { type, customerId, title }
+      });
       
       return ApiResponse.created(res, { conversation }, 'Conversation created successfully');
     } catch (error) {
@@ -111,19 +110,18 @@ class ChatController {
       });
       
       // Audit log (no body content for privacy)
-      await auditLog(
-        'chat.message.created',
-        'ChatMessage',
-        message.id,
-        req.userId || null,
-        req.customerId || null,
-        { 
+      await AuditLog.create({
+        userId: req.userId || null,
+        action: 'chat.message.created',
+        entity: 'ChatMessage',
+        entityId: message.id,
+        changes: { 
           conversationId: id, 
           messageType,
           bodyLength: body?.length || 0,
           hasMetadata: !!metadata
         }
-      );
+      });
       
       return ApiResponse.created(res, { message }, 'Message sent successfully');
     } catch (error) {
@@ -181,14 +179,13 @@ class ChatController {
         }
       });
       
-      await auditLog(
-        'chat.document.shared',
-        'ChatMessage',
-        message.id,
-        req.userId,
-        null,
-        { conversationId: id, documentType: 'invoice', documentId: invoiceId }
-      );
+      await AuditLog.create({
+        userId: req.userId,
+        action: 'chat.document.shared',
+        entity: 'ChatMessage',
+        entityId: message.id,
+        changes: { conversationId: id, documentType: 'invoice', documentId: invoiceId }
+      });
       
       return ApiResponse.created(res, { message }, 'Invoice shared successfully');
     } catch (error) {
@@ -221,14 +218,13 @@ class ChatController {
         }
       });
       
-      await auditLog(
-        'chat.document.shared',
-        'ChatMessage',
-        message.id,
-        req.userId,
-        null,
-        { conversationId: id, documentType: 'quote', documentId: quoteId }
-      );
+      await AuditLog.create({
+        userId: req.userId,
+        action: 'chat.document.shared',
+        entity: 'ChatMessage',
+        entityId: message.id,
+        changes: { conversationId: id, documentType: 'quote', documentId: quoteId }
+      });
       
       return ApiResponse.created(res, { message }, 'Quote shared successfully');
     } catch (error) {
@@ -273,14 +269,13 @@ class ChatController {
       
       const pin = await chatService.resolvePin(pinId, req.userId);
       
-      await auditLog(
-        'chat.pin.resolved',
-        'ChatReviewPin',
-        pinId,
-        req.userId,
-        null,
-        { status: 'RESOLVED' }
-      );
+      await AuditLog.create({
+        userId: req.userId,
+        action: 'chat.pin.resolved',
+        entity: 'ChatReviewPin',
+        entityId: pinId,
+        changes: { status: 'RESOLVED' }
+      });
       
       return ApiResponse.success(res, { pin }, 'Pin resolved successfully');
     } catch (error) {
@@ -303,14 +298,13 @@ class ChatController {
       
       const pin = await chatService.reopenPin(pinId);
       
-      await auditLog(
-        'chat.pin.reopened',
-        'ChatReviewPin',
-        pinId,
-        req.userId,
-        null,
-        { status: 'OPEN' }
-      );
+      await AuditLog.create({
+        userId: req.userId,
+        action: 'chat.pin.reopened',
+        entity: 'ChatReviewPin',
+        entityId: pinId,
+        changes: { status: 'OPEN' }
+      });
       
       return ApiResponse.success(res, { pin }, 'Pin reopened successfully');
     } catch (error) {
@@ -334,14 +328,13 @@ class ChatController {
       
       const link = await chatService.addPinLink(pinId, linkType, documentId, req.userId);
       
-      await auditLog(
-        'chat.pin.link.added',
-        'ChatReviewPinLink',
-        link.id,
-        req.userId,
-        null,
-        { pinId, linkType, documentId }
-      );
+      await AuditLog.create({
+        userId: req.userId,
+        action: 'chat.pin.link.added',
+        entity: 'ChatReviewPinLink',
+        entityId: link.id,
+        changes: { pinId, linkType, documentId }
+      });
       
       return ApiResponse.created(res, { link }, 'Document linked successfully');
     } catch (error) {
@@ -364,14 +357,13 @@ class ChatController {
       
       await chatService.removePinLink(linkId);
       
-      await auditLog(
-        'chat.pin.link.removed',
-        'ChatReviewPinLink',
-        linkId,
-        req.userId,
-        null,
-        { pinId, linkId }
-      );
+      await AuditLog.create({
+        userId: req.userId,
+        action: 'chat.pin.link.removed',
+        entity: 'ChatReviewPinLink',
+        entityId: linkId,
+        changes: { pinId, linkId }
+      });
       
       return ApiResponse.success(res, null, 'Document link removed successfully');
     } catch (error) {

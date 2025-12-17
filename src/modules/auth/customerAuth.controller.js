@@ -1,6 +1,6 @@
 const customerAuthService = require('./customerAuth.service');
 const ApiResponse = require('../../utils/apiResponse');
-const { auditLog } = require('../audit/audit.service');
+const { AuditLog } = require('../../database/models');
 
 class CustomerAuthController {
   /**
@@ -12,14 +12,13 @@ class CustomerAuthController {
     try {
       const customer = await customerAuthService.register(req.body);
       
-      await auditLog(
-        'customer.auth.registered',
-        'Customer',
-        customer.id,
-        null,
-        customer.id,
-        { authEmail: customer.authEmail }
-      );
+      await AuditLog.create({
+        userId: null,
+        action: 'customer.auth.registered',
+        entity: 'Customer',
+        entityId: customer.id,
+        changes: { authEmail: customer.authEmail }
+      });
       
       return ApiResponse.created(res, { customer }, 'Customer registered successfully');
     } catch (error) {
@@ -38,14 +37,13 @@ class CustomerAuthController {
       
       const result = await customerAuthService.login(authEmail, password);
       
-      await auditLog(
-        'customer.auth.login',
-        'Customer',
-        result.customer.id,
-        null,
-        result.customer.id,
-        { authEmail }
-      );
+      await AuditLog.create({
+        userId: null,
+        action: 'customer.auth.login',
+        entity: 'Customer',
+        entityId: result.customer.id,
+        changes: { authEmail }
+      });
       
       return ApiResponse.success(res, result, 'Login successful');
     } catch (error) {
@@ -85,14 +83,13 @@ class CustomerAuthController {
       
       await customerAuthService.changePassword(req.customerId, currentPassword, newPassword);
       
-      await auditLog(
-        'customer.auth.password_changed',
-        'Customer',
-        req.customerId,
-        null,
-        req.customerId,
-        {}
-      );
+      await AuditLog.create({
+        userId: null,
+        action: 'customer.auth.password_changed',
+        entity: 'Customer',
+        entityId: req.customerId,
+        changes: {}
+      });
       
       return ApiResponse.success(res, null, 'Password changed successfully');
     } catch (error) {
@@ -157,14 +154,13 @@ class CustomerAuthController {
       
       const customer = await customerAuthService.enableAuth(customerId, authEmail, password);
       
-      await auditLog(
-        'customer.auth.enabled',
-        'Customer',
-        customerId,
-        req.userId,
-        customerId,
-        { authEmail }
-      );
+      await AuditLog.create({
+        userId: req.userId,
+        action: 'customer.auth.enabled',
+        entity: 'Customer',
+        entityId: customerId,
+        changes: { authEmail }
+      });
       
       return ApiResponse.success(res, { customer }, 'Customer authentication enabled');
     } catch (error) {
@@ -187,14 +183,13 @@ class CustomerAuthController {
       
       const customer = await customerAuthService.disableAuth(customerId);
       
-      await auditLog(
-        'customer.auth.disabled',
-        'Customer',
-        customerId,
-        req.userId,
-        customerId,
-        {}
-      );
+      await AuditLog.create({
+        userId: req.userId,
+        action: 'customer.auth.disabled',
+        entity: 'Customer',
+        entityId: customerId,
+        changes: {}
+      });
       
       return ApiResponse.success(res, { customer }, 'Customer authentication disabled');
     } catch (error) {
