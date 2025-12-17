@@ -73,6 +73,8 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password, rememberMe = false) => {
     try {
+      console.log('Login attempt to:', `${config.apiUrl}/auth/login`)
+      
       const response = await fetch(`${config.apiUrl}/auth/login`, {
         method: 'POST',
         headers: {
@@ -80,6 +82,8 @@ export const AuthProvider = ({ children }) => {
         },
         body: JSON.stringify({ email, password }),
       })
+
+      console.log('Login response status:', response.status)
 
       const data = await response.json()
 
@@ -98,6 +102,20 @@ export const AuthProvider = ({ children }) => {
       return { success: true, user: data.data.user }
     } catch (error) {
       console.error('Login error:', error)
+      console.error('Error details:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack
+      })
+      
+      // Provide more specific error messages
+      if (error.message === 'Failed to fetch') {
+        return { 
+          success: false, 
+          error: 'Unable to connect to server. Please check if the backend is running at ' + config.apiUrl 
+        }
+      }
+      
       return { success: false, error: error.message }
     }
   }

@@ -13,6 +13,9 @@ RUN rm -f package-lock.json && \
 # Copy source files
 COPY . .
 
+# Set environment variables for build
+ENV VITE_API_URL=http://localhost:3000/api
+
 # Build the React app
 RUN npm run build
 
