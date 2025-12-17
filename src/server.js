@@ -1,4 +1,5 @@
 const express = require('express');
+const http = require('http');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -9,8 +10,10 @@ const errorHandler = require('./middleware/errorHandler');
 const { specs, swaggerUi } = require('./config/swagger');
 const requestLogger = require('./middleware/requestLogger');
 const logger = require('./utils/logger');
+const { initializeSocketIO } = require('./socket');
 
 const app = express();
+const httpServer = http.createServer(app);
 
 // Security middleware
 app.use(helmet());
@@ -125,8 +128,14 @@ const startServer = async () => {
       process.exit(1);
     }
     
+    // Initialize Socket.IO
+    const io = initializeSocketIO(httpServer);
+    
+    // Make io instance available to routes if needed
+    app.set('io', io);
+    
     // Start listening
-    app.listen(config.app.port, () => {
+    httpServer.listen(config.app.port, () => {
       const startupMessage = `
 ╔═══════════════════════════════════════════════════════╗
 ║                    Finan API Server                   ║
@@ -134,12 +143,14 @@ const startServer = async () => {
 ║  Environment: ${config.app.env.padEnd(39)}║
 ║  Port:        ${String(config.app.port).padEnd(39)}║
 ║  API Docs:    http://localhost:${config.app.port}/api-docs${' '.repeat(9)}║
+║  Socket.IO:   Enabled${' '.repeat(31)}║
 ╚═══════════════════════════════════════════════════════╝
       `;
       console.log(startupMessage);
       logger.info('Server started successfully', {
         environment: config.app.env,
         port: config.app.port,
+        socketIO: 'enabled'
       });
     });
   } catch (error) {
