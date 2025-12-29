@@ -91,20 +91,21 @@ form {
 
 /* User List */
 .user-list {
-  max-height: 200px;
+  max-height: 300px;
   overflow-y: auto;
   border: 1px solid #ddd;
   border-radius: 4px;
-  padding: 10px;
+  padding: 8px;
 }
 
 .user-checkbox {
   display: flex;
-  align-items: center;
-  padding: 8px;
+  align-items: flex-start;
+  padding: 12px 8px;
   cursor: pointer;
   border-radius: 4px;
   transition: background 0.2s;
+  gap: 10px;
 }
 
 .user-checkbox:hover {
@@ -112,17 +113,29 @@ form {
 }
 
 .user-checkbox input[type="checkbox"] {
-  margin-right: 10px;
+  margin-top: 3px;
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .user-checkbox input[type="checkbox"]:disabled {
   cursor: not-allowed;
 }
 
-.user-checkbox span {
+.user-info {
+  flex: 1;
+}
+
+.user-name {
   font-size: 14px;
+  font-weight: 600;
   color: #333;
+  margin-bottom: 4px;
+}
+
+.user-details {
+  font-size: 12px;
+  color: #666;
 }
 
 /* Error Message */
