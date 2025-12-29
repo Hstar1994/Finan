@@ -13,8 +13,11 @@ RUN rm -f package-lock.json && \
 # Copy source files
 COPY . .
 
+# Accept build argument for API URL
+ARG VITE_API_URL=http://localhost:3000/api
+
 # Set environment variables for build
-ENV VITE_API_URL=http://localhost:3000/api
+ENV VITE_API_URL=${VITE_API_URL}
 
 # Build the React app
 RUN npm run build

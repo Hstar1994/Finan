@@ -38,8 +38,10 @@ services:
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
       RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
       RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-100}
+      CORS_ORIGIN: http://localhost:8080,http://192.168.8.12:8080,http://127.0.0.1:8080
+      FRONTEND_URL: http://192.168.8.12:8080
     ports:
-      - "${PORT:-3000}:3000"
+      - "3000:3000"
     depends_on:
       postgres:
         condition: service_healthy
@@ -56,7 +58,11 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=http://192.168.8.12:3000/api
     container_name: finan-frontend
+    environment:
+      - VITE_API_URL=http://192.168.8.12:3000/api
     ports:
       - "8080:80"
     depends_on:
