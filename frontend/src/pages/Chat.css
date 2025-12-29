@@ -258,6 +258,23 @@
   font-size: 0.9rem;
 }
 
+.message-document {
+  color: #2196f3;
+}
+
+.message-optimistic {
+  opacity: 0.6;
+}
+
+.message-optimistic .message-content {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.8; }
+}
+
 .message-time {
   font-size: 0.75rem;
   opacity: 0.7;

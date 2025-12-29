@@ -501,12 +501,15 @@ const Chat = () => {
                   {messages.map(msg => (
                     <div
                       key={msg.id}
-                      className={`message ${msg.userId === user?.id ? 'message-sent' : 'message-received'}`}
+                      className={`message ${msg.senderUserId === user?.id ? 'message-sent' : 'message-received'} ${msg.isOptimistic ? 'message-optimistic' : ''}`}
                     >
                       <div className="message-content">
-                        {msg.type === 'TEXT' && <p>{msg.body}</p>}
-                        {msg.type === 'SYSTEM' && (
+                        {(msg.messageType === 'TEXT' || !msg.messageType) && <p>{msg.body}</p>}
+                        {msg.messageType === 'SYSTEM' && (
                           <p className="message-system">ℹ️ {msg.body}</p>
+                        )}
+                        {msg.messageType === 'DOCUMENT' && (
+                          <p className="message-document">📄 {msg.body}</p>
                         )}
                         <span className="message-time">{formatTimestamp(msg.createdAt)}</span>
                       </div>
