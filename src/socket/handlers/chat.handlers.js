@@ -128,15 +128,15 @@ const handleChatConnection = (io, socket) => {
         return;
       }
 
-      // Send message using service
-      const message = await chatService.sendMessage(
+      // Send message using service with correct field names
+      const message = await chatService.sendMessage({
         conversationId,
-        socket.userId,
-        socket.customerId,
+        senderUserId: socket.userId || null,
+        senderCustomerId: socket.customerId || null,
+        messageType: type,  // Map 'type' to 'messageType'
         body,
-        type,
         metadata
-      );
+      });
 
       // Broadcast to all participants in the conversation room
       const roomName = `conv:${conversationId}`;
@@ -145,10 +145,10 @@ const handleChatConnection = (io, socket) => {
         message: {
           id: message.id,
           conversationId: message.conversationId,
-          userId: message.userId,
-          customerId: message.customerId,
+          userId: message.senderUserId,
+          customerId: message.senderCustomerId,
           body: message.body,
-          type: message.type,
+          type: message.messageType,
           metadata: message.metadata,
           createdAt: message.createdAt,
           editedAt: message.editedAt

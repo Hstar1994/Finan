@@ -273,10 +273,35 @@ const Chat = () => {
     return 'Conversation'
   }
 
-  const handleConversationCreated = (newConversation) => {
-    setConversations(prev => [newConversation, ...prev])
-    setSelectedConversation(newConversation)
+  const handleConversationCreated = async (newConversation) => {
     setShowNewConversation(false)
+    
+    // Refetch the full conversation list to get proper nested data
+    try {
+      const response = await fetch(`${config.apiUrl}/chat/conversations`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        const conversationsList = data.data?.conversations || []
+        setConversations(conversationsList)
+        
+        // Select the newly created conversation
+        const created = conversationsList.find(c => c.id === newConversation.id)
+        if (created) {
+          setSelectedConversation(created)
+        }
+      }
+    } catch (err) {
+      console.error('Error refetching conversations:', err)
+      // Fallback: just add the new conversation to the list
+      setConversations(prev => [newConversation, ...prev])
+      setSelectedConversation(newConversation)
+    }
   }
 
   return (
