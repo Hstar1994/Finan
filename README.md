@@ -40,6 +40,16 @@ A comprehensive, modular financing application similar to Refrens, built with No
 - IP address and user agent logging
 - Query audit logs by entity, action, or user
 
+### 💬 Real-Time Chat System
+- Internal team communication
+- Customer-facing chat support
+- Real-time messaging with Socket.IO
+- File attachments and media sharing
+- Review pins (link messages to invoices, quotes, receipts)
+- Read receipts and message status
+- Conversation management and search
+- Role-based access control
+
 ### 🎯 Clean API Structure
 - RESTful API design
 - Modular architecture
@@ -58,9 +68,11 @@ A comprehensive, modular financing application similar to Refrens, built with No
 - **Backend**: Node.js, Express.js
 - **Database**: PostgreSQL
 - **ORM**: Sequelize
+- **Real-Time**: Socket.IO
 - **Authentication**: JWT (jsonwebtoken)
 - **Security**: Helmet, bcryptjs, CORS, Rate limiting
 - **Documentation**: Swagger/OpenAPI
+- **Frontend**: React 18, Vite
 - **Containerization**: Docker, Docker Compose
 
 ## Prerequisites
@@ -241,6 +253,16 @@ Once the server is running, visit:
 - `GET /api/audit/:id` - Get audit log by ID
 - `GET /api/audit/:entity/:entityId` - Get audit logs for specific entity
 
+### Chat (Real-Time)
+- `GET /api/chat/conversations` - List user's conversations
+- `POST /api/chat/conversations` - Create new conversation
+- `GET /api/chat/conversations/:id` - Get conversation details
+- `GET /api/chat/conversations/:id/messages` - Get conversation messages
+- `POST /api/chat/conversations/:id/messages` - Send message (also via Socket.IO)
+- `POST /api/chat/messages/:id/read` - Mark message as read
+- `POST /api/chat/review-pins` - Create review pin (link to invoice/quote/receipt)
+- **Socket.IO Events**: `join_conversation`, `send_message`, `new_message`, `message_read`
+
 ## Project Structure
 
 ```
@@ -266,7 +288,12 @@ Finan/
 │   │   ├── quotes/       # Quote management
 │   │   ├── receipts/     # Receipt management
 │   │   ├── creditNotes/  # Credit note management
+│   │   ├── chat/         # Real-time chat module
 │   │   └── audit/        # Audit log viewing
+│   ├── socket/           # Socket.IO configuration
+│   │   ├── index.js      # Socket.IO setup
+│   │   ├── handlers/     # Socket event handlers
+│   │   └── middleware/   # Socket authentication
 │   ├── routes/           # Route definitions
 │   │   └── index.js      # Main router
 │   └── server.js         # Application entry point
@@ -316,6 +343,9 @@ The application uses a relational database with the following main entities:
 - **Quotes**: Sales quotes with line items
 - **Receipts**: Payment receipts
 - **CreditNotes**: Credit notes with line items
+- **ChatConversations**: Chat conversations and participants
+- **ChatMessages**: Real-time messages with attachments
+- **ChatReviewPins**: Links between messages and financial documents
 - **AuditLogs**: Complete audit trail
 
 ## Development
@@ -362,11 +392,12 @@ The modular architecture supports easy addition of:
 - 💳 **Payment Gateway Integration**: Stripe, PayPal, Razorpay
 - 📧 **Email Notifications**: Invoice sending, payment reminders
 - 📱 **CRM Features**: Lead management, opportunity tracking
-- 🔔 **Notifications**: Real-time alerts and notifications
+- 🔔 **Push Notifications**: Mobile and desktop notifications
 - 📅 **Scheduling**: Recurring invoices, payment reminders
 - 📤 **Export Features**: PDF generation, Excel exports
 - 🌍 **Multi-currency**: Support for multiple currencies
 - 🎨 **Customization**: Custom fields, templates
+- 💬 **Chat Enhancements**: Message editing/deletion, typing indicators, search, reactions
 
 ## License
 
