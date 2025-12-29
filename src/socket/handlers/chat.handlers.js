@@ -13,6 +13,12 @@ const handleChatConnection = (io, socket) => {
   
   logger.info(`Chat connection established: ${actorType} ${actorId}`);
 
+  // Join user's personal room for notifications
+  if (socket.userId) {
+    socket.join(`user:${socket.userId}`);
+    logger.info(`User ${socket.userId} joined personal room`);
+  }
+
   /**
    * Join a conversation room
    */
@@ -138,21 +144,28 @@ const handleChatConnection = (io, socket) => {
         metadata
       });
 
+      // Fetch the full message with user data included
+      const { ChatMessage, User, Customer } = require('../../database/models');
+      const fullMessage = await ChatMessage.findByPk(message.id, {
+        include: [
+          {
+            model: User,
+            as: 'senderUser',
+            attributes: ['id', 'firstName', 'lastName', 'email', 'role']
+          },
+          {
+            model: Customer,
+            as: 'senderCustomer',
+            attributes: ['id', 'name', 'email']
+          }
+        ]
+      });
+
       // Broadcast to all participants in the conversation room
       const roomName = `conv:${conversationId}`;
       io.to(roomName).emit('new_message', {
         conversationId,
-        message: {
-          id: message.id,
-          conversationId: message.conversationId,
-          userId: message.senderUserId,
-          customerId: message.senderCustomerId,
-          body: message.body,
-          type: message.messageType,
-          metadata: message.metadata,
-          createdAt: message.createdAt,
-          editedAt: message.editedAt
-        }
+        message: fullMessage.toJSON()
       });
 
       logger.info(`Message sent in conversation ${conversationId} by ${actorType} ${actorId}`);

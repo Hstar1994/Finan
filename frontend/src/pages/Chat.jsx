@@ -139,6 +139,29 @@ const Chat = () => {
       console.log('User left:', data)
     })
 
+    newSocket.on('conversation_created', (data) => {
+      console.log('Conversation created:', data)
+      // Add new conversation to list
+      setConversations(prev => {
+        // Check if conversation already exists
+        if (prev.some(conv => conv.id === data.conversation.id)) {
+          return prev
+        }
+        return [data.conversation, ...prev]
+      })
+    })
+
+    newSocket.on('conversation_deleted', (data) => {
+      console.log('Conversation deleted:', data)
+      // Remove conversation from list
+      setConversations(prev => prev.filter(conv => conv.id !== data.conversationId))
+      // Clear selection if it's the deleted conversation
+      if (selectedConversation?.id === data.conversationId) {
+        setSelectedConversation(null)
+        setMessages([])
+      }
+    })
+
     newSocket.on('error', (data) => {
       console.error('Socket error:', data)
       setError(data.message || 'An error occurred')

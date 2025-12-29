@@ -33,6 +33,18 @@ class ChatController {
         entityId: conversation.id,
         changes: { type, customerId, title }
       });
+
+      // Broadcast to all participants via Socket.IO
+      const io = req.app.get('io');
+      if (io && conversation.participants) {
+        conversation.participants.forEach(participant => {
+          if (participant.userId) {
+            io.to(`user:${participant.userId}`).emit('conversation_created', {
+              conversation
+            });
+          }
+        });
+      }
       
       return ApiResponse.created(res, { conversation }, 'Conversation created successfully');
     } catch (error) {
@@ -380,6 +392,17 @@ class ChatController {
     try {
       const { id } = req.params;
       
+      // Get conversation participants before deleting
+      const { ChatConversation, ChatParticipant } = require('../../database/models');
+      const conversation = await ChatConversation.findByPk(id, {
+        include: [{
+          model: ChatParticipant,
+          as: 'participants',
+          where: { leftAt: null },
+          required: false
+        }]
+      });
+      
       await chatService.deleteConversation(
         id,
         req.actorType === 'staff' ? req.userId : null,
@@ -395,6 +418,19 @@ class ChatController {
         entityId: id,
         changes: { conversationId: id }
       });
+
+      // Broadcast to all participants via Socket.IO
+      const io = req.app.get('io');
+      if (io && conversation && conversation.participants) {
+        conversation.participants.forEach(participant => {
+          if (participant.userId && participant.userId !== req.userId) {
+            io.to(`user:${participant.userId}`).emit('conversation_deleted', {
+              conversationId: id,
+              deletedBy: req.userId
+            });
+          }
+        });
+      }
       
       return ApiResponse.success(res, null, 'Conversation deleted successfully');
     } catch (error) {
