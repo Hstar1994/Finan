@@ -1,4 +1,5 @@
 const { User, AuditLog } = require('../../database/models');
+const logger = require('../../utils/logger');
 
 /**
  * Get all users (Admin/Manager only)
@@ -135,7 +136,7 @@ const createUser = async (req, res, next) => {
       },
       ipAddress: req.ip || req.connection.remoteAddress,
       userAgent: req.headers['user-agent']
-    }).catch(err => console.error('Audit log error:', err));
+    }).catch(err => logger.error('Failed to create audit log for user creation', { error: err.message }));
     
     // Remove password from response
     const userResponse = user.toJSON();
@@ -225,7 +226,7 @@ const updateUser = async (req, res, next) => {
       changes: updates,
       ipAddress: req.ip || req.connection.remoteAddress,
       userAgent: req.headers['user-agent']
-    }).catch(err => console.error('Audit log error:', err));
+    }).catch(err => logger.error('Failed to create audit log for user update', { error: err.message, userId: user.id }));
     
     // Remove password from response
     const userResponse = user.toJSON();
@@ -278,7 +279,7 @@ const deleteUser = async (req, res, next) => {
       },
       ipAddress: req.ip || req.connection.remoteAddress,
       userAgent: req.headers['user-agent']
-    }).catch(err => console.error('Audit log error:', err));
+    }).catch(err => logger.error('Failed to create audit log for user deletion', { error: err.message, userId: user.id }));
     
     // Delete user
     await user.destroy();
