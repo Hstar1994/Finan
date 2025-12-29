@@ -69,11 +69,29 @@ const Chat = () => {
       
       if (currentConv && data.conversationId === currentConv.id) {
         setMessages(prev => {
-          // Check if message already exists (prevent duplicates)
+          // Check if message already exists by real ID (prevent duplicates)
           if (prev.some(msg => msg.id === data.message.id)) {
             console.log('Duplicate message, skipping')
             return prev
           }
+          
+          // Check if this is replacing an optimistic message
+          // Match by body, timestamp proximity (within 2 seconds), and sender
+          const optimisticIndex = prev.findIndex(msg => 
+            msg.isOptimistic && 
+            msg.body === data.message.body &&
+            msg.senderUserId === data.message.senderUserId &&
+            Math.abs(new Date(msg.createdAt) - new Date(data.message.createdAt)) < 2000
+          )
+          
+          if (optimisticIndex !== -1) {
+            console.log('Replacing optimistic message with real message')
+            // Replace the optimistic message
+            const newMessages = [...prev]
+            newMessages[optimisticIndex] = data.message
+            return newMessages
+          }
+          
           console.log('Adding message to current conversation')
           return [...prev, data.message]
         })
@@ -324,6 +342,19 @@ const Chat = () => {
     return 'Conversation'
   }
 
+  const getSenderName = (message) => {
+    if (message.senderUser) {
+      return `${message.senderUser.firstName} ${message.senderUser.lastName}`
+    }
+    if (message.senderCustomer) {
+      return message.senderCustomer.name
+    }
+    if (message.senderUserId === user?.id) {
+      return 'You'
+    }
+    return 'Unknown'
+  }
+
   const handleConversationCreated = async (newConversation) => {
     setShowNewConversation(false)
     
@@ -498,23 +529,31 @@ const Chat = () => {
                 </div>
               ) : (
                 <>
-                  {messages.map(msg => (
-                    <div
-                      key={msg.id}
-                      className={`message ${msg.senderUserId === user?.id ? 'message-sent' : 'message-received'} ${msg.isOptimistic ? 'message-optimistic' : ''}`}
-                    >
-                      <div className="message-content">
-                        {(msg.messageType === 'TEXT' || !msg.messageType) && <p>{msg.body}</p>}
-                        {msg.messageType === 'SYSTEM' && (
-                          <p className="message-system">ℹ️ {msg.body}</p>
+                  {messages.map(msg => {
+                    const isSentByMe = msg.senderUserId === user?.id
+                    const senderName = getSenderName(msg)
+                    
+                    return (
+                      <div
+                        key={msg.id}
+                        className={`message ${isSentByMe ? 'message-sent' : 'message-received'} ${msg.isOptimistic ? 'message-optimistic' : ''}`}
+                      >
+                        {!isSentByMe && msg.messageType !== 'SYSTEM' && (
+                          <div className="message-sender-name">{senderName}</div>
                         )}
-                        {msg.messageType === 'DOCUMENT' && (
-                          <p className="message-document">📄 {msg.body}</p>
-                        )}
-                        <span className="message-time">{formatTimestamp(msg.createdAt)}</span>
+                        <div className="message-content">
+                          {(msg.messageType === 'TEXT' || !msg.messageType) && <p>{msg.body}</p>}
+                          {msg.messageType === 'SYSTEM' && (
+                            <p className="message-system">ℹ️ {msg.body}</p>
+                          )}
+                          {msg.messageType === 'DOCUMENT' && (
+                            <p className="message-document">📄 {msg.body}</p>
+                          )}
+                          <span className="message-time">{formatTimestamp(msg.createdAt)}</span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                   {typingUsers.size > 0 && (
                     <div className="typing-indicator">
                       <span>Someone is typing</span>

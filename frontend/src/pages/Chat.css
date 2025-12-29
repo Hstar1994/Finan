@@ -225,6 +225,16 @@
 
 .message-received {
   justify-content: flex-start;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.message-sender-name {
+  font-size: 0.75rem;
+  color: #666;
+  margin-bottom: 2px;
+  margin-left: 12px;
+  font-weight: 500;
 }
 
 .message-content {
