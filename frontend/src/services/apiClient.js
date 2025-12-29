@@ -19,18 +19,12 @@ apiClient.interceptors.request.use(
       requestConfig.headers.Authorization = `Bearer ${token}`;
     }
 
-    // Log requests in development
-    if (config.isDevelopment) {
-      console.log('🚀 Request:', requestConfig.method.toUpperCase(), requestConfig.url);
-      if (requestConfig.data) {
-        console.log('📤 Data:', requestConfig.data);
-      }
-    }
-
     return requestConfig;
   },
   (error) => {
-    console.error('❌ Request Error:', error);
+    if (config.isDevelopment) {
+      console.error('Request Error:', error);
+    }
     return Promise.reject(error);
   }
 );
@@ -38,11 +32,6 @@ apiClient.interceptors.request.use(
 // Response interceptor
 apiClient.interceptors.response.use(
   (response) => {
-    // Log responses in development
-    if (config.isDevelopment) {
-      console.log('✅ Response:', response.config.url, response.status);
-    }
-
     // Return data directly (standardized response format)
     return response.data;
   },
@@ -60,7 +49,9 @@ apiClient.interceptors.response.use(
       switch (status) {
         case 401:
           // Unauthorized - token expired or invalid
-          console.warn('🔒 Unauthorized: Redirecting to login...');
+          if (config.isDevelopment) {
+            console.warn('Unauthorized: Redirecting to login');
+          }
           localStorage.clear();
           sessionStorage.clear();
           window.location.href = '/login';
@@ -68,18 +59,24 @@ apiClient.interceptors.response.use(
 
         case 403:
           // Forbidden - insufficient permissions
-          console.warn('⛔ Forbidden: Insufficient permissions');
+          if (config.isDevelopment) {
+            console.warn('Forbidden: Insufficient permissions');
+          }
           break;
 
         case 404:
           // Not found
-          console.warn('🔍 Not Found:', error.config?.url);
+          if (config.isDevelopment) {
+            console.warn('Not Found:', error.config?.url);
+          }
           break;
 
         case 429:
           // Rate limited
           const retryAfter = error.response.headers['retry-after'] || 60;
-          console.warn(`⏱️ Rate Limited: Retry after ${retryAfter} seconds`);
+          if (config.isDevelopment) {
+            console.warn(`Rate Limited: Retry after ${retryAfter} seconds`);
+          }
           error.retryAfter = retryAfter;
           break;
 
@@ -88,11 +85,15 @@ apiClient.interceptors.response.use(
         case 503:
         case 504:
           // Server errors
-          console.error('🔥 Server Error:', status);
+          if (config.isDevelopment) {
+            console.error('Server Error:', status);
+          }
           break;
 
         default:
-          console.error('❌ Error:', status, data?.message);
+          if (config.isDevelopment) {
+            console.error('Error:', status, data?.message);
+          }
       }
 
       // Return standardized error object

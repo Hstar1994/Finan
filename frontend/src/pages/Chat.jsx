@@ -32,8 +32,6 @@ const Chat = () => {
     if (!token) return
 
     const socketUrl = config.apiUrl.replace('/api', '').replace('/v1', '')
-    console.log('Initializing Socket.IO connection to:', socketUrl)
-    console.log('Using token:', token ? 'Token present' : 'No token')
     
     const newSocket = io(socketUrl, {
       auth: { token },
@@ -41,19 +39,17 @@ const Chat = () => {
     })
 
     newSocket.on('connect', () => {
-      console.log('✅ Socket.IO connected successfully:', newSocket.id)
       setError(null)
     })
 
     newSocket.on('connect_error', (err) => {
-      console.error('❌ Socket.IO connection error:', err)
-      console.error('Error message:', err.message)
-      console.error('Error description:', err.description)
+      if (config.isDevelopment) {
+        console.error('Socket.IO connection error:', err.message)
+      }
       setError('Unable to connect to chat server. Please check your connection.')
     })
 
     newSocket.on('disconnect', (reason) => {
-      console.log('Socket.IO disconnected:', reason)
       if (reason === 'io server disconnect') {
         // Server disconnected, try to reconnect
         newSocket.connect()
@@ -61,8 +57,6 @@ const Chat = () => {
     })
 
     newSocket.on('new_message', (data) => {
-      console.log('📨 New message received:', data)
-      
       // Add message to the current conversation if it matches
       // Use ref to get current value
       const currentConv = selectedConversationRef.current
@@ -71,7 +65,6 @@ const Chat = () => {
         setMessages(prev => {
           // Check if message already exists by real ID (prevent duplicates)
           if (prev.some(msg => msg.id === data.message.id)) {
-            console.log('Duplicate message, skipping')
             return prev
           }
           
@@ -88,17 +81,12 @@ const Chat = () => {
           }
           
           if (optimisticIndex !== -1) {
-            console.log('✅ Replacing optimistic message with real message', {
-              optimisticId: prev[optimisticIndex].id,
-              realId: data.message.id
-            })
             // Replace the optimistic message
             const newMessages = [...prev]
             newMessages[optimisticIndex] = data.message
             return newMessages
           }
           
-          console.log('Adding new message to current conversation')
           return [...prev, data.message]
         })
         
@@ -115,7 +103,6 @@ const Chat = () => {
     })
 
     newSocket.on('message_read', (data) => {
-      console.log('Message read:', data)
       // Update read status in messages
       setMessages(prev => prev.map(msg => 
         msg.id === data.messageId ? { ...msg, read: true } : msg
@@ -137,16 +124,16 @@ const Chat = () => {
       }
     })
 
-    newSocket.on('user_joined', (data) => {
-      console.log('User joined:', data)
+    // Socket event handlers
+    newSocket.on('user_joined', () => {
+      // User joined conversation - could show notification
     })
 
-    newSocket.on('user_left', (data) => {
-      console.log('User left:', data)
+    newSocket.on('user_left', () => {
+      // User left conversation - could show notification
     })
 
     newSocket.on('conversation_created', (data) => {
-      console.log('Conversation created:', data)
       // Add new conversation to list
       setConversations(prev => {
         // Check if conversation already exists
@@ -158,7 +145,6 @@ const Chat = () => {
     })
 
     newSocket.on('conversation_deleted', (data) => {
-      console.log('Conversation deleted:', data)
       // Remove conversation from list
       setConversations(prev => prev.filter(conv => conv.id !== data.conversationId))
       // Clear selection if it's the deleted conversation
@@ -169,7 +155,6 @@ const Chat = () => {
     })
 
     newSocket.on('error', (data) => {
-      console.error('Socket error:', data)
       setError(data.message || 'An error occurred')
     })
 
