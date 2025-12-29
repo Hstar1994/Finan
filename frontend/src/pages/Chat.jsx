@@ -20,6 +20,12 @@ const Chat = () => {
   const [showNewConversation, setShowNewConversation] = useState(false)
   const messagesEndRef = useRef(null)
   const typingTimeoutRef = useRef(null)
+  const selectedConversationRef = useRef(selectedConversation)
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    selectedConversationRef.current = selectedConversation
+  }, [selectedConversation])
 
   // Initialize Socket.IO connection
   useEffect(() => {
@@ -58,18 +64,23 @@ const Chat = () => {
       console.log('📨 New message received:', data)
       
       // Add message to the current conversation if it matches
-      setMessages(prev => {
-        // Check if this message is for the currently selected conversation
-        // Use a functional update to get latest selectedConversation
-        if (data.conversationId === selectedConversation?.id) {
+      // Use ref to get current value
+      const currentConv = selectedConversationRef.current
+      
+      if (currentConv && data.conversationId === currentConv.id) {
+        setMessages(prev => {
           // Check if message already exists (prevent duplicates)
           if (prev.some(msg => msg.id === data.message.id)) {
+            console.log('Duplicate message, skipping')
             return prev
           }
+          console.log('Adding message to current conversation')
           return [...prev, data.message]
-        }
-        return prev
-      })
+        })
+        
+        // Scroll to bottom
+        setTimeout(() => scrollToBottom(), 100)
+      }
       
       // Update conversation list with new message
       setConversations(prev => prev.map(conv => 
@@ -77,11 +88,6 @@ const Chat = () => {
           ? { ...conv, lastMessage: data.message, lastMessageAt: data.message.createdAt }
           : conv
       ))
-      
-      // Scroll to bottom if new message is in current conversation
-      if (data.conversationId === selectedConversation?.id) {
-        setTimeout(() => scrollToBottom(), 100)
-      }
     })
 
     newSocket.on('message_read', (data) => {
