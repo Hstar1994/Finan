@@ -55,17 +55,33 @@ const Chat = () => {
     })
 
     newSocket.on('new_message', (data) => {
-      console.log('New message received:', data)
-      if (selectedConversation && data.conversationId === selectedConversation.id) {
-        setMessages(prev => [...prev, data.message])
-        scrollToBottom()
-      }
+      console.log('📨 New message received:', data)
+      
+      // Add message to the current conversation if it matches
+      setMessages(prev => {
+        // Check if this message is for the currently selected conversation
+        // Use a functional update to get latest selectedConversation
+        if (data.conversationId === selectedConversation?.id) {
+          // Check if message already exists (prevent duplicates)
+          if (prev.some(msg => msg.id === data.message.id)) {
+            return prev
+          }
+          return [...prev, data.message]
+        }
+        return prev
+      })
+      
       // Update conversation list with new message
       setConversations(prev => prev.map(conv => 
         conv.id === data.conversationId 
           ? { ...conv, lastMessage: data.message, lastMessageAt: data.message.createdAt }
           : conv
       ))
+      
+      // Scroll to bottom if new message is in current conversation
+      if (data.conversationId === selectedConversation?.id) {
+        setTimeout(() => scrollToBottom(), 100)
+      }
     })
 
     newSocket.on('message_read', (data) => {
@@ -197,6 +213,21 @@ const Chat = () => {
     setMessageInput('')
     setIsSending(true)
 
+    // Create optimistic message
+    const optimisticMessage = {
+      id: `temp-${Date.now()}`,
+      conversationId: selectedConversation.id,
+      senderUserId: user?.id,
+      body: messageText,
+      messageType: 'TEXT',
+      createdAt: new Date().toISOString(),
+      isOptimistic: true
+    }
+
+    // Add optimistic message immediately
+    setMessages(prev => [...prev, optimisticMessage])
+    scrollToBottom()
+
     try {
       // Send via Socket.IO for real-time delivery
       if (socket && socket.connected) {
@@ -204,6 +235,15 @@ const Chat = () => {
           conversationId: selectedConversation.id,
           body: messageText,
           type: 'TEXT'
+        }, (response) => {
+          // Acknowledgment callback
+          if (response?.error) {
+            console.error('Message send error:', response.error)
+            setError('Failed to send message')
+            // Remove optimistic message
+            setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id))
+            setMessageInput(messageText)
+          }
         })
       } else {
         // Fallback to REST API if socket not connected
@@ -215,14 +255,17 @@ const Chat = () => {
               'Authorization': `Bearer ${token}`,
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ body: messageText, type: 'TEXT' })
+            body: JSON.stringify({ body: messageText, messageType: 'TEXT' })
           }
         )
 
         if (!response.ok) throw new Error('Failed to send message')
 
         const data = await response.json()
-        setMessages(prev => [...prev, data.data.message])
+        // Replace optimistic message with real one
+        setMessages(prev => prev.map(m => 
+          m.id === optimisticMessage.id ? data.data.message : m
+        ))
         scrollToBottom()
       }
 
@@ -233,6 +276,8 @@ const Chat = () => {
     } catch (err) {
       console.error('Error sending message:', err)
       setError('Failed to send message')
+      // Remove optimistic message
+      setMessages(prev => prev.filter(m => m.id !== optimisticMessage.id))
       setMessageInput(messageText) // Restore message on error
     } finally {
       setIsSending(false)
@@ -304,6 +349,39 @@ const Chat = () => {
     }
   }
 
+  const handleDeleteConversation = async (conversationId) => {
+    if (!window.confirm('Are you sure you want to delete this conversation? This action cannot be undone.')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`${config.apiUrl}/chat/conversations/${conversationId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete conversation')
+      }
+
+      // Remove from list
+      setConversations(prev => prev.filter(c => c.id !== conversationId))
+      
+      // Clear selection if this was selected
+      if (selectedConversation?.id === conversationId) {
+        setSelectedConversation(null)
+        setMessages([])
+      }
+
+      setError(null)
+    } catch (err) {
+      console.error('Error deleting conversation:', err)
+      setError('Failed to delete conversation')
+    }
+  }
+
   return (
     <div className="chat-container">
       {/* New Conversation Modal */}
@@ -346,27 +424,41 @@ const Chat = () => {
               <div
                 key={conv.id}
                 className={`conversation-item ${selectedConversation?.id === conv.id ? 'active' : ''}`}
-                onClick={() => setSelectedConversation(conv)}
               >
-                <div className="conversation-avatar">
-                  {conv.type === 'CUSTOMER_DM' ? '👤' : '👥'}
-                </div>
-                <div className="conversation-info">
-                  <div className="conversation-header">
-                    <span className="conversation-title">{getConversationTitle(conv)}</span>
-                    {conv.lastMessageAt && (
-                      <span className="conversation-time">
-                        {formatTimestamp(conv.lastMessageAt)}
-                      </span>
+                <div 
+                  className="conversation-content"
+                  onClick={() => setSelectedConversation(conv)}
+                >
+                  <div className="conversation-avatar">
+                    {conv.type === 'CUSTOMER_DM' ? '👤' : '👥'}
+                  </div>
+                  <div className="conversation-info">
+                    <div className="conversation-header">
+                      <span className="conversation-title">{getConversationTitle(conv)}</span>
+                      {conv.lastMessageAt && (
+                        <span className="conversation-time">
+                          {formatTimestamp(conv.lastMessageAt)}
+                        </span>
+                      )}
+                    </div>
+                    {conv.lastMessage && (
+                      <div className="conversation-preview">
+                        {conv.lastMessage.body?.substring(0, 50)}
+                        {conv.lastMessage.body?.length > 50 ? '...' : ''}
+                      </div>
                     )}
                   </div>
-                  {conv.lastMessage && (
-                    <div className="conversation-preview">
-                      {conv.lastMessage.body?.substring(0, 50)}
-                      {conv.lastMessage.body?.length > 50 ? '...' : ''}
-                    </div>
-                  )}
                 </div>
+                <button
+                  className="conversation-delete-btn"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleDeleteConversation(conv.id)
+                  }}
+                  title="Delete conversation"
+                >
+                  🗑️
+                </button>
               </div>
             ))}
           </div>

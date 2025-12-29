@@ -70,10 +70,18 @@
 .conversation-item {
   display: flex;
   align-items: center;
-  padding: 15px 20px;
+  justify-content: space-between;
   border-bottom: 1px solid #f0f0f0;
-  cursor: pointer;
   transition: background 0.2s;
+  position: relative;
+}
+
+.conversation-content {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  padding: 15px 20px;
+  cursor: pointer;
 }
 
 .conversation-item:hover {
@@ -83,6 +91,26 @@
 .conversation-item.active {
   background: #e3f2fd;
   border-left: 3px solid #2196f3;
+}
+
+.conversation-delete-btn {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  padding: 8px 12px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s, background 0.2s;
+  border-radius: 4px;
+  margin-right: 10px;
+}
+
+.conversation-item:hover .conversation-delete-btn {
+  opacity: 1;
+}
+
+.conversation-delete-btn:hover {
+  background: #ffebee;
 }
 
 .conversation-avatar {
