@@ -78,6 +78,19 @@ router.post(
 );
 
 /**
+ * Delete a conversation (soft delete)
+ * DELETE /api/v1/chat/conversations/:id
+ * Auth: Required + must be participant
+ */
+router.delete(
+  '/conversations/:id',
+  authenticateChatUser,
+  enforceConversationType,
+  canAccessConversation,
+  controller.deleteConversation
+);
+
+/**
  * Share invoice in conversation
  * POST /api/v1/chat/conversations/:id/share/invoice
  * Auth: Staff only + must be participant

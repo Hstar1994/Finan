@@ -397,6 +397,49 @@ class ChatService {
   }
 
   /**
+   * Delete a conversation (soft delete - marks user as left)
+   * @param {string} conversationId - Conversation ID
+   * @param {string} userId - User ID leaving the conversation
+   * @param {string} customerId - Customer ID leaving the conversation (optional)
+   */
+  async deleteConversation(conversationId, userId, customerId) {
+    // Find the conversation
+    const conversation = await ChatConversation.findByPk(conversationId);
+    
+    if (!conversation) {
+      throw new Error('Conversation not found');
+    }
+    
+    // For staff users, mark as left
+    if (userId) {
+      const participant = await ChatParticipant.findOne({
+        where: {
+          conversationId,
+          userId,
+          leftAt: null
+        }
+      });
+      
+      if (participant) {
+        await participant.update({ leftAt: new Date() });
+      }
+    }
+    
+    // For customer DMs, mark customer as left
+    if (customerId && conversation.type === 'CUSTOMER_DM') {
+      await conversation.update({ 
+        metadata: {
+          ...conversation.metadata,
+          customerLeft: true,
+          customerLeftAt: new Date()
+        }
+      });
+    }
+    
+    return { success: true };
+  }
+
+  /**
    * Scan message for entity mentions and create review pins
    * @param {string} messageId
    * @param {string} conversationId

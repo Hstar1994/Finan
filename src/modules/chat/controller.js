@@ -370,6 +370,37 @@ class ChatController {
       next(error);
     }
   }
+
+  /**
+   * Delete a conversation (soft delete)
+   * DELETE /api/v1/chat/conversations/:id
+   * Auth: Required + must be participant
+   */
+  async deleteConversation(req, res, next) {
+    try {
+      const { id } = req.params;
+      
+      await chatService.deleteConversation(
+        id,
+        req.actorType === 'staff' ? req.userId : null,
+        req.actorType === 'customer' ? req.customerId : null
+      );
+      
+      // Audit log
+      await AuditLog.create({
+        userId: req.userId || null,
+        customerId: req.customerId || null,
+        action: 'chat.conversation.deleted',
+        entity: 'ChatConversation',
+        entityId: id,
+        changes: { conversationId: id }
+      });
+      
+      return ApiResponse.success(res, null, 'Conversation deleted successfully');
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new ChatController();
