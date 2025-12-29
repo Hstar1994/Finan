@@ -76,23 +76,29 @@ const Chat = () => {
           }
           
           // Check if this is replacing an optimistic message
-          // Match by body, timestamp proximity (within 2 seconds), and sender
-          const optimisticIndex = prev.findIndex(msg => 
-            msg.isOptimistic && 
-            msg.body === data.message.body &&
-            msg.senderUserId === data.message.senderUserId &&
-            Math.abs(new Date(msg.createdAt) - new Date(data.message.createdAt)) < 2000
-          )
+          // Find the LAST (most recent) optimistic message with matching body and sender
+          let optimisticIndex = -1
+          for (let i = prev.length - 1; i >= 0; i--) {
+            if (prev[i].isOptimistic && 
+                prev[i].body === data.message.body &&
+                prev[i].senderUserId === data.message.senderUserId) {
+              optimisticIndex = i
+              break
+            }
+          }
           
           if (optimisticIndex !== -1) {
-            console.log('Replacing optimistic message with real message')
+            console.log('✅ Replacing optimistic message with real message', {
+              optimisticId: prev[optimisticIndex].id,
+              realId: data.message.id
+            })
             // Replace the optimistic message
             const newMessages = [...prev]
             newMessages[optimisticIndex] = data.message
             return newMessages
           }
           
-          console.log('Adding message to current conversation')
+          console.log('Adding new message to current conversation')
           return [...prev, data.message]
         })
         
