@@ -14,6 +14,8 @@ import Receipts from './pages/Receipts'
 import Users from './pages/Users'
 import AuditLogs from './pages/AuditLogs'
 import Chat from './pages/Chat'
+import ErrorBoundaryTest from './pages/ErrorBoundaryTest'
+import config from './config'
 
 function App() {
   return (
@@ -51,6 +53,11 @@ function App() {
                           </ProtectedRoute>
                         } 
                       />
+                      
+                      {/* Development only routes */}
+                      {config.isDevelopment && (
+                        <Route path="/test-error-boundary" element={<ErrorBoundaryTest />} />
+                      )}
                       
                       {/* 404 */}
                       <Route path="*" element={<div><h1>404 - Page Not Found</h1></div>} />
