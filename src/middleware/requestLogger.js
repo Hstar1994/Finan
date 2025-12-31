@@ -1,5 +1,6 @@
 const morgan = require('morgan');
 const logger = require('../utils/logger');
+const config = require('../config');
 
 // Custom token for user ID
 morgan.token('user-id', (req) => {
@@ -40,7 +41,7 @@ const prodFormat = JSON.stringify({
 });
 
 // Create morgan middleware based on environment
-const requestLogger = process.env.NODE_ENV === 'production'
+const requestLogger = config.app.env === 'production'
   ? morgan(prodFormat, {
       stream: logger.stream,
       skip: (req, res) => res.statusCode < 400, // Only log errors in production

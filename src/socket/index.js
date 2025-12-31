@@ -2,6 +2,7 @@ const { Server } = require('socket.io');
 const { authenticateSocket } = require('./middleware/auth');
 const { handleChatConnection } = require('./handlers/chat.handlers');
 const logger = require('../utils/logger');
+const config = require('../config');
 
 /**
  * Initialize Socket.IO server
@@ -12,7 +13,7 @@ const initializeSocketIO = (httpServer) => {
   // Create Socket.IO server with CORS configuration
   const io = new Server(httpServer, {
     cors: {
-      origin: process.env.FRONTEND_URL || 'http://localhost:8080',
+      origin: config.frontend.url,
       methods: ['GET', 'POST'],
       credentials: true
     },

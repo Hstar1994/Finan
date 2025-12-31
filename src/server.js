@@ -21,15 +21,8 @@ app.use(helmet());
 // CORS configuration - whitelist specific origins
 const corsOptions = {
   origin: (origin, callback) => {
-    // Parse allowed origins from environment variable or use defaults
-    const whitelist = process.env.CORS_ORIGIN?.split(',') || [
-      'http://localhost:8080',
-      'http://localhost:3000',
-      'http://localhost:5173', // Vite default port
-      'http://127.0.0.1:5173',
-      'http://127.0.0.1:8080',
-      'http://127.0.0.1:3000'
-    ];
+    // Parse allowed origins from config
+    const whitelist = config.cors.origin;
     
     // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) {

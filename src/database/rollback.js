@@ -77,7 +77,7 @@ async function rollbackMigrations(steps = 1) {
       });
 
     // Confirm rollback
-    if (process.env.NODE_ENV === 'production') {
+    if (config.app.env === 'production') {
       logger.error('❌ Rollback in production requires manual confirmation');
       logger.error('Set CONFIRM_ROLLBACK=yes to proceed');
       if (process.env.CONFIRM_ROLLBACK !== 'yes') {
