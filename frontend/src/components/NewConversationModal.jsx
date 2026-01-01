@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
-import config from '../config/env'
+import { config } from '../config/env'
 import './NewConversationModal.css'
 
 const NewConversationModal = ({ onClose, onConversationCreated }) => {

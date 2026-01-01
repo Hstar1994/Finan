@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../contexts/AuthContext'
-import config from '../config/env'
+import { config } from '../config/env'
 import io from 'socket.io-client'
 import NewConversationModal from '../components/NewConversationModal'
 import './Chat.css'

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import config from '../config/env'
+import { config } from '../config/env'
 
 const AuthContext = createContext()
 
