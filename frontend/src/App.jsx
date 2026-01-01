@@ -15,7 +15,7 @@ import Users from './pages/Users'
 import AuditLogs from './pages/AuditLogs'
 import Chat from './pages/Chat'
 import ErrorBoundaryTest from './pages/ErrorBoundaryTest'
-import config from './config'
+import { config } from './config/env'
 
 function App() {
   return (
