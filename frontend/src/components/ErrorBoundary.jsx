@@ -1,6 +1,6 @@
 import React from 'react'
 import './ErrorBoundary.css'
-import config from '../config'
+import { config } from '../config/env'
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
