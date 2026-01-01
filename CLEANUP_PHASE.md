@@ -305,14 +305,41 @@ logging: {
 8. 9765d4b - Task 1.3 documentation
 9. ca26ff6 - Centralize environment variables
 
+### Bug Fixes (Post-Sprint 1):
+
+#### January 1, 2026 - Config Import Issues Fixed 🔧
+**Issue**: Frontend sign-in stuck after Task 1.4 config centralization  
+**Root Cause**: Task 1.4 changed config exports to named exports but several components still used default imports  
+**Commits**: 0e41549, 0cee849, 40bedeb
+
+**Files Fixed**:
+1. ✅ `frontend/src/App.jsx` - Changed `import config from './config'` → `import { config } from './config/env'`
+2. ✅ `frontend/src/components/ErrorBoundary.jsx` - Changed `import config from '../config'` → `import { config } from '../config/env'`
+3. ✅ `frontend/src/contexts/AuthContext.jsx` - Fixed config import (critical for login!)
+4. ✅ `frontend/src/pages/Chat.jsx` - Fixed config import
+5. ✅ `frontend/src/components/NewConversationModal.jsx` - Fixed config import
+
+**Additional Changes**:
+- Created `frontend/.env` with `VITE_API_URL=http://192.168.8.12:3000/api` for LAN testing
+- Verified docker-compose.yml already configured for LAN (CORS_ORIGIN includes 192.168.8.12)
+- Rebuilt frontend container with correct configuration
+- Documented network switching issue (localhost vs LAN)
+
+**Lessons Learned**:
+- ✅ When changing export patterns, grep search all imports: `grep -r "import config from" frontend/src/`
+- ✅ Browser cache can mask build issues - always test in incognito or hard refresh
+- ✅ Frontend .env files are not committed (gitignored) - each environment needs its own
+- ✅ LAN testing requires consistent network configuration across all services
+
+**Testing Notes**:
+- Application should work on both localhost (development) and LAN (testing/demo)
+- LAN configuration allows testing from other devices on same network
+- Future consideration: Make LAN vs localhost configurable for easier deployment options
+
 ### Next Steps:
 Ready to begin **Sprint 2: Testing & Documentation** (Week 2)
 
 ---
-
-- [ ] `src/middleware/errorHandler.js` - Use config.app.env
-- [ ] `src/middleware/requestLogger.js` - Use config.app.env
-- [ ] `src/utils/logger.js` - Use config.logging.level
 
 **Implementation Plan**:
 1. Audit all process.env usage (23 instances)
