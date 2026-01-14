@@ -16,6 +16,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:setup-db": "node tests/setupTestDb.js",
+    "test:unit": "jest --testPathIgnorePatterns=integration",
     "audit": "npm audit && cd frontend && npm audit",
     "audit:fix": "npm audit fix && cd frontend && npm audit fix"
   },
