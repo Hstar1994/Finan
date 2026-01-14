@@ -370,30 +370,63 @@ Ready to begin **Sprint 2: Testing & Documentation** (Week 2)
 
 ### Goal: Build comprehensive test coverage
 
-#### Task 2.1: Set Up Test Environment ⏳
+#### Task 2.1: Set Up Test Environment ✅
 **Priority**: HIGH  
 **Effort**: 1 day  
-**Status**: ⏳ NOT STARTED
+**Status**: ✅ COMPLETE  
+**Completed**: January 1, 2026  
+**Commit**: 8bbe971
 
-**Files to Create/Update**:
-- [ ] `tests/helpers/testDb.js` - Test database utilities
-- [ ] `tests/helpers/authHelper.js` - Generate test tokens
-- [ ] `tests/factories/` - Data factories for testing
-- [ ] `jest.config.js` - Update configuration
+**Files Created**:
+- [x] `tests/helpers/testDb.js` - Test database utilities (createTestDbIfNotExists, getTestSequelize, syncModels, cleanAllTables, closeTestConnection)
+- [x] `tests/helpers/authHelper.js` - Generate test tokens (generateToken, generateExpiredToken, createAuthenticatedRequest, mockAuthMiddleware)
+- [x] `tests/factories/index.js` - Data factories for User, Customer, Invoice, Conversation, Message, Participant
+- [x] `tests/setupTestDb.js` - Script to initialize test database
 
-**Implementation Plan**:
-1. Set up test database
-2. Create test utilities
-3. Add data factories
-4. Configure Jest for coverage
-5. Add pre-test hooks
+**Files Updated**:
+- [x] `tests/setup.js` - Enhanced with proper test environment configuration and cleanup hooks
+- [x] `package.json` - Added npm scripts: test:setup-db, test:unit, test:integration, test:all
+
+**Unit Tests Added** (Part of Test Environment Setup):
+- [x] `tests/__tests__/utils/permissions.test.js` - 34 tests for PERMISSIONS, hasPermission, hasAnyPermission, hasAllPermissions
+- [x] `tests/__tests__/utils/logger.test.js` - 17 tests for Winston logger configuration
+- [x] `tests/__tests__/middleware/auth.test.js` - 13 tests for authenticate and authorize middleware
+- [x] `tests/__tests__/middleware/permissions.test.js` - 22 tests for requirePermission, requireRole, etc.
+- [x] `tests/__tests__/middleware/errorHandler.test.js` - 16 tests for error handling
+
+**Test Results**:
+```
+Test Suites: 1 skipped, 7 passed, 7 of 8 total
+Tests:       11 skipped, 120 passed, 131 total
+Statements   : 11.09% ( 251/2263 )
+Branches     : 10.97% ( 106/966 )
+Functions    : 12.97% ( 34/262 )
+Lines        : 11.06% ( 247/2232 )
+```
+
+**npm Scripts Added**:
+```json
+"test:setup-db": "node tests/setupTestDb.js",
+"test:unit": "jest --testPathIgnorePatterns=chat --coverage",
+"test:integration": "npm run test:setup-db && jest --testPathPatterns=chat",
+"test:all": "npm run test:setup-db && jest --coverage"
+```
+
+**Acceptance Criteria**:
+- [x] Test database utilities created
+- [x] Auth helper for generating test tokens
+- [x] Data factories for all main models
+- [x] Jest configuration optimized for coverage
+- [x] Pre-test hooks and cleanup working
+- [x] Unit tests for utils and middleware (102 tests)
+- [x] Coverage improved from 7% to 11%
 
 ---
 
-#### Task 2.2: Write Controller Tests ⏳
+#### Task 2.2: Write Controller Tests 🔄
 **Priority**: HIGH  
 **Effort**: 3 days  
-**Status**: ⏳ NOT STARTED
+**Status**: 🔄 IN PROGRESS
 
 **Test Files to Create**:
 - [ ] `tests/__tests__/invoices/controller.test.js`
@@ -442,9 +475,12 @@ Ready to begin **Sprint 2: Testing & Documentation** (Week 2)
 
 ### 📊 Sprint 2 Progress Tracking
 
-**Overall Progress**: 0/4 tasks complete (0%)
+**Overall Progress**: 1/4 tasks complete (25%)
+
+**Coverage Progress**: 7% → 11% (Target: 70%+)
 
 **Time Estimate**: 7 days  
+**Start Date**: January 1, 2026  
 **Target Completion**: January 10, 2026
 
 ---
