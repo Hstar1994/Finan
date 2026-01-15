@@ -7,6 +7,11 @@ morgan.token('user-id', (req) => {
   return req.user ? req.user.id : 'anonymous';
 });
 
+// Custom token for request ID (correlation ID)
+morgan.token('request-id', (req) => {
+  return req.requestId || '-';
+});
+
 // Custom token for request body (excluding sensitive data)
 morgan.token('body', (req) => {
   if (!req.body || Object.keys(req.body).length === 0) {
@@ -26,11 +31,12 @@ morgan.token('body', (req) => {
   return JSON.stringify(sanitizedBody);
 });
 
-// Development format - detailed logging
-const devFormat = ':method :url :status :response-time ms - :user-id - :body';
+// Development format - detailed logging with request ID
+const devFormat = '[:request-id] :method :url :status :response-time ms - :user-id - :body';
 
-// Production format - structured JSON logging
+// Production format - structured JSON logging with request ID
 const prodFormat = JSON.stringify({
+  requestId: ':request-id',
   method: ':method',
   url: ':url',
   status: ':status',

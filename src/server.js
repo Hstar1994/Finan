@@ -4,19 +4,39 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const config = require('./config');
-const { testConnection } = require('./database/connection');
+const { sequelize, testConnection } = require('./database/connection');
 const routes = require('./routes');
 const errorHandler = require('./middleware/errorHandler');
 const { specs, swaggerUi } = require('./config/swagger');
 const requestLogger = require('./middleware/requestLogger');
+const { requestIdMiddleware } = require('./middleware/requestId');
 const logger = require('./utils/logger');
 const { initializeSocketIO } = require('./socket');
 
 const app = express();
 const httpServer = http.createServer(app);
 
+// Track server state for graceful shutdown
+let isShuttingDown = false;
+let io = null;
+
 // Security middleware
 app.use(helmet());
+
+// Request ID middleware (must be early for correlation)
+app.use(requestIdMiddleware);
+
+// Graceful shutdown middleware - reject new requests when shutting down
+app.use((req, res, next) => {
+  if (isShuttingDown) {
+    res.setHeader('Connection', 'close');
+    return res.status(503).json({
+      success: false,
+      message: 'Server is shutting down, please retry later'
+    });
+  }
+  next();
+});
 
 // CORS configuration - whitelist specific origins
 const corsOptions = {
@@ -76,27 +96,84 @@ app.get('/', (req, res) => {
 
 // Health check endpoint for monitoring and load balancers
 app.get('/health', async (req, res) => {
+  const startTime = Date.now();
+  const healthData = {
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    uptime: Math.floor(process.uptime()),
+    environment: config.app.env,
+    version: '1.0.0',
+    checks: {}
+  };
+  
   try {
-    // Check database connection
+    // 1. Database health check
+    const dbStart = Date.now();
     await testConnection();
-    
-    res.status(200).json({
+    healthData.checks.database = {
       status: 'healthy',
-      timestamp: new Date().toISOString(),
-      uptime: Math.floor(process.uptime()),
-      environment: config.app.env,
-      database: 'connected',
-      version: '1.0.0'
-    });
+      responseTime: Date.now() - dbStart
+    };
   } catch (error) {
-    logger.error('Health check failed:', error);
-    res.status(503).json({
+    healthData.status = 'unhealthy';
+    healthData.checks.database = {
       status: 'unhealthy',
-      timestamp: new Date().toISOString(),
-      database: 'disconnected',
       error: error.message
-    });
+    };
   }
+  
+  // 2. Memory usage
+  const memUsage = process.memoryUsage();
+  healthData.checks.memory = {
+    status: 'healthy',
+    heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024),
+    heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024),
+    external: Math.round(memUsage.external / 1024 / 1024),
+    rss: Math.round(memUsage.rss / 1024 / 1024),
+    unit: 'MB'
+  };
+  
+  // Warn if heap usage is above 80%
+  const heapUsagePercent = (memUsage.heapUsed / memUsage.heapTotal) * 100;
+  if (heapUsagePercent > 80) {
+    healthData.checks.memory.status = 'warning';
+    healthData.checks.memory.warning = `Heap usage at ${heapUsagePercent.toFixed(1)}%`;
+  }
+  
+  // 3. Socket.IO status
+  if (io) {
+    const sockets = await io.fetchSockets();
+    healthData.checks.socketIO = {
+      status: 'healthy',
+      connectedClients: sockets.length
+    };
+  } else {
+    healthData.checks.socketIO = {
+      status: 'not_initialized'
+    };
+  }
+  
+  // 4. Database pool stats (if available)
+  try {
+    const pool = sequelize.connectionManager.pool;
+    if (pool) {
+      healthData.checks.databasePool = {
+        status: 'healthy',
+        size: pool.size || 0,
+        available: pool.available || 0,
+        pending: pool.pending || 0
+      };
+    }
+  } catch (e) {
+    // Pool stats not available
+    healthData.checks.databasePool = { status: 'unknown' };
+  }
+  
+  // Calculate total response time
+  healthData.responseTime = Date.now() - startTime;
+  
+  const statusCode = healthData.status === 'healthy' ? 200 : 503;
+  res.status(statusCode).json(healthData);
 });
 
 // Readiness probe for Kubernetes/Docker orchestration
@@ -122,7 +199,7 @@ const startServer = async () => {
     }
     
     // Initialize Socket.IO
-    const io = initializeSocketIO(httpServer);
+    io = initializeSocketIO(httpServer);
     
     // Make io instance available to routes if needed
     app.set('io', io);
@@ -152,10 +229,78 @@ const startServer = async () => {
   }
 };
 
+// Graceful shutdown function
+const gracefulShutdown = async (signal) => {
+  if (isShuttingDown) {
+    logger.warn('Shutdown already in progress, ignoring signal', { signal });
+    return;
+  }
+  
+  isShuttingDown = true;
+  logger.info('Graceful shutdown initiated', { signal });
+  
+  // Set a hard timeout for shutdown (30 seconds)
+  const shutdownTimeout = setTimeout(() => {
+    logger.error('Graceful shutdown timed out, forcing exit');
+    process.exit(1);
+  }, 30000);
+  
+  try {
+    // 1. Close Socket.IO connections
+    if (io) {
+      logger.info('Closing Socket.IO connections...');
+      await new Promise((resolve) => {
+        io.close(() => {
+          logger.info('Socket.IO connections closed');
+          resolve();
+        });
+      });
+    }
+    
+    // 2. Close HTTP server (stop accepting new connections)
+    logger.info('Closing HTTP server...');
+    await new Promise((resolve, reject) => {
+      httpServer.close((err) => {
+        if (err) {
+          logger.error('Error closing HTTP server', { error: err.message });
+          reject(err);
+        } else {
+          logger.info('HTTP server closed');
+          resolve();
+        }
+      });
+    });
+    
+    // 3. Close database connection pool
+    logger.info('Closing database connections...');
+    await sequelize.close();
+    logger.info('Database connections closed');
+    
+    // Clear the timeout and exit cleanly
+    clearTimeout(shutdownTimeout);
+    logger.info('Graceful shutdown completed successfully');
+    process.exit(0);
+  } catch (error) {
+    logger.error('Error during graceful shutdown', { error: error.message });
+    clearTimeout(shutdownTimeout);
+    process.exit(1);
+  }
+};
+
+// Handle shutdown signals
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
   logger.error('Unhandled Promise Rejection:', err);
-  process.exit(1);
+  gracefulShutdown('unhandledRejection');
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  logger.error('Uncaught Exception:', err);
+  gracefulShutdown('uncaughtException');
 });
 
 startServer();

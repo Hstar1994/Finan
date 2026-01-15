@@ -25,6 +25,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: development  # Use development stage for local dev
     container_name: finan-backend
     environment:
       NODE_ENV: ${NODE_ENV:-development}
@@ -54,6 +55,44 @@ services:
       - finan-network
     command: npm run dev
 
+  # Production backend service (use with: docker-compose --profile production up)
+  backend-prod:
+    profiles:
+      - production
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production  # Use production stage
+    container_name: finan-backend-prod
+    environment:
+      NODE_ENV: production
+      PORT: ${PORT:-3000}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-finan_db}
+      DB_USER: ${DB_USER:-finan}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
+      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
+      RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-100}
+    secrets:
+      - db_password
+      - jwt_secret
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - finan-network
+    # Read secrets from files
+    entrypoint: >
+      sh -c '
+        export DB_PASSWORD=$$(cat /run/secrets/db_password) &&
+        export JWT_SECRET=$$(cat /run/secrets/jwt_secret) &&
+        node src/server.js
+      '
+
   frontend:
     build:
       context: ./frontend
@@ -78,5 +117,14 @@ networks:
 volumes:
   postgres_data:
     driver: local
+  node_modules:
+    driver: local
+
+# Docker secrets for production (create files: secrets/db_password.txt, secrets/jwt_secret.txt)
+secrets:
+  db_password:
+    file: ./secrets/db_password.txt
+  jwt_secret:
+    file: ./secrets/jwt_secret.txt
   node_modules:
     driver: local
