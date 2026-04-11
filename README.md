@@ -1,408 +1,225 @@
-# Finan - Modular Financing Application
+# Finan - Financial Management System
 
-A comprehensive, modular financing application similar to Refrens, built with Node.js, Express, and PostgreSQL.
+A full-stack financial management application built with Node.js, Express, PostgreSQL, React, and Socket.IO. Manage customers, invoices, quotes, receipts, and communicate in real-time — all with role-based access control and Docker deployment.
+
+## Quick Start
+
+```bash
+# Clone & enter project
+git clone https://github.com/Hstar1994/Finan.git
+cd Finan
+
+# Copy environment files
+cp .env.example .env
+cp frontend/.env.example frontend/.env
+
+# Start all services (Postgres + Backend + Frontend)
+docker-compose up -d
+
+# Run migrations and seed demo data
+docker exec finan-backend npm run db:migrate
+docker exec finan-backend npm run db:seed
+```
+
+Open in your browser:
+
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:8080 |
+| API | http://localhost:3000/api/v1 |
+| Swagger Docs | http://localhost:3000/api-docs |
+| Health Check | http://localhost:3000/api/health |
+
+**Default Logins:**
+
+| Email | Password | Role |
+|-------|----------|------|
+| admin@finan.com | admin123 | Admin |
+| manager@finan.com | manager123 | Manager |
+| user@finan.com | user123 | User |
 
 ## Features
 
-### 🔐 Secure Authentication & Authorization
-- JWT-based authentication
-- Role-based access control (Admin, Manager, User)
-- Secure password hashing with bcrypt
-- Token-based session management
-
-### 💾 Docker-Backed Database
-- PostgreSQL database with Docker support
-- Persistent data volumes
-- Easy setup and deployment
-
-### 👥 Customer Management
-- Complete customer profiles
-- Balance tracking
-- Credit limit management
-- Customer search and filtering
-
-### 📄 Financial Documents
-- **Invoices**: Create, manage, and track invoices with automatic numbering
-- **Quotes**: Generate professional quotes with expiry dates
-- **Receipts**: Record payments with multiple payment methods
-- **Credit Notes**: Issue credit notes for returns and adjustments
-
-### 🏷️ Item Price List
-- Comprehensive item/product catalog
-- SKU management
-- Category organization
-- Tax rate configuration
-- Unit price tracking
-
-### 📊 Audit Logging
-- Complete audit trail for all changes
-- Track user actions with timestamps
-- IP address and user agent logging
-- Query audit logs by entity, action, or user
-
-### 💬 Real-Time Chat System
-- Internal team communication
-- Customer-facing chat support
-- Real-time messaging with Socket.IO
-- File attachments and media sharing
-- Review pins (link messages to invoices, quotes, receipts)
-- Read receipts and message status
-- Conversation management and search
-- Role-based access control
-
-### 🎯 Clean API Structure
-- RESTful API design
-- Modular architecture
-- Swagger/OpenAPI documentation
-- Error handling and validation
-- Rate limiting for security
-
-### 🔮 Future-Ready
-- Modular design for easy extension
-- Ready for CRM integration
-- Payment gateway integration support
-- Reporting module support
+- **Customer Management** — CRUD, balance tracking, credit limits, search/filter
+- **Invoices** — Full lifecycle with auto-numbering (INV-XXXXXX), line items, status tracking, tax/discount calculations
+- **Quotes** — Auto-numbering (QUO-XXXXXX), expiry dates, status transitions
+- **Receipts** — Auto-numbering (REC-XXXXXX), multiple payment methods, customer balance updates
+- **Items Catalog** — SKU, categories, tax rates, stock tracking
+- **Real-Time Chat** — Socket.IO messaging, 3-panel UI, conversation management, review pins
+- **Audit System** — Full audit trail on all CRUD operations with IP/user agent tracking
+- **Authentication** — JWT with role-based access control (Admin, Manager, User)
+- **API Documentation** — Swagger/OpenAPI at `/api-docs`
 
 ## Tech Stack
 
-- **Backend**: Node.js, Express.js
-- **Database**: PostgreSQL
-- **ORM**: Sequelize
-- **Real-Time**: Socket.IO
-- **Authentication**: JWT (jsonwebtoken)
-- **Security**: Helmet, bcryptjs, CORS, Rate limiting
-- **Documentation**: Swagger/OpenAPI
-- **Frontend**: React 18, Vite
-- **Containerization**: Docker, Docker Compose
+| Layer | Technology |
+|-------|-----------|
+| Backend | Node.js 18, Express 4.18 |
+| Database | PostgreSQL 15, Sequelize 6.35 |
+| Frontend | React 18, Vite 5, React Router 6 |
+| Real-Time | Socket.IO 4.8 |
+| Auth | JWT (jsonwebtoken), bcryptjs |
+| Logging | Winston (structured, file rotation) |
+| Testing | Jest 30, Supertest 7 |
+| CI/CD | GitHub Actions |
+| Deployment | Docker, docker-compose, multi-stage builds |
 
-## Prerequisites
-
-- Node.js (v14 or higher)
-- Docker and Docker Compose
-- npm or yarn
-
-## Quick Start (5 minutes)
-
-### Option 1: Docker (Recommended)
+## Local Development (Without Docker)
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/Hstar1994/Finan.git
-cd Finan
-
-# 2. Start everything with Docker
-docker-compose up -d
-
-# 3. Run migrations and seed data
-docker-compose exec backend npm run db:migrate
-docker-compose exec backend npm run db:seed
-
-# 4. Open your browser
-# Backend API: http://localhost:3000
-# Frontend: http://localhost:8080
-# API Docs: http://localhost:3000/api-docs
-```
-
-**Default Login Credentials:**
-- Admin: `admin@finan.com` / `admin123`
-- Manager: `manager@finan.com` / `manager123`
-- User: `user@finan.com` / `user123`
-
-### Option 2: Local Development
-
-```bash
-# 1. Clone and install
-git clone https://github.com/Hstar1994/Finan.git
-cd Finan
+# Install backend dependencies
 npm install
 
-# 2. Start PostgreSQL with Docker
+# Start only Postgres via Docker
 docker-compose up -d postgres
 
-# 3. Setup environment
+# Copy and edit environment
 cp .env.example .env
-# Edit .env if needed
 
-# 4. Setup database
+# Setup database
 npm run db:migrate
 npm run db:seed
 
-# 5. Start backend
+# Start backend (hot-reload via nodemon)
 npm run dev
 
-# 6. Start frontend (in another terminal)
+# In another terminal — start frontend
 cd frontend
-npm start
+npm install
+npm run dev
 ```
 
-## Detailed Installation
+## Available Scripts
 
-### Prerequisites
-- Docker Desktop (for containerized setup)
-- OR Node.js v14+ and PostgreSQL (for local setup)
+### Backend
 
-### Environment Configuration
+| Script | Description |
+|--------|-------------|
+| `npm start` | Production server |
+| `npm run dev` | Development with hot-reload (nodemon) |
+| `npm test` | Run all tests |
+| `npm run test:coverage` | Tests with coverage report |
+| `npm run test:unit` | Unit tests only |
+| `npm run test:watch` | Watch mode |
+| `npm run db:migrate` | Apply pending migrations |
+| `npm run db:rollback` | Rollback last migration |
+| `npm run db:status` | Show migration status |
+| `npm run db:seed` | Seed demo data |
+| `npm run db:indexes` | Add performance indexes |
 
-The `.env` file is created automatically, but you can customize:
-
-```env
-NODE_ENV=development
-PORT=3000
-
-# Database (use 'postgres' as host when running in Docker)
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=finan_db
-DB_USER=finan
-DB_PASSWORD=finan123
-
-# JWT (change in production!)
-JWT_SECRET=your-secret-key-change-in-production
-JWT_EXPIRES_IN=24h
-
-# Rate Limiting
-RATE_LIMIT_WINDOW_MS=900000
-RATE_LIMIT_MAX_REQUESTS=100
-```
-
-### Available Scripts
+### Docker
 
 ```bash
-# Backend
-npm start              # Start production server
-npm run dev           # Start development server with auto-reload
-npm run db:migrate    # Run database migrations
-npm run db:seed       # Seed demo data
-
-# Docker
-docker-compose up -d              # Start all services
-docker-compose down               # Stop all services
-docker-compose logs -f backend    # View backend logs
-docker-compose logs -f postgres   # View database logs
-docker-compose exec backend bash  # Access backend container shell
+docker-compose up -d                    # Start all services
+docker-compose up -d --build            # Rebuild and start
+docker-compose logs -f backend          # View backend logs
+docker exec finan-backend npm run <cmd> # Run command in backend container
+docker-compose down                     # Stop all
+docker-compose down -v                  # Stop and delete data
 ```
 
-## Accessing the Application
+### Production Mode
 
-Once running, you can access:
-
-- **Frontend**: http://localhost:8080 (Login and dashboard)
-- **Backend API**: http://localhost:3000
-- **API Documentation**: http://localhost:3000/api-docs
-- **Health Check**: http://localhost:3000/api/health
-
-## API Documentation
-
-Once the server is running, visit:
-- **Swagger UI**: http://localhost:3000/api-docs
+```bash
+# Uses Docker secrets for passwords/JWT (see secrets/ folder)
+docker-compose --profile production up -d backend-prod
+```
 
 ## API Endpoints
 
-### Authentication
-- `POST /api/auth/login` - User login
-- `POST /api/auth/register` - Register new user (Admin only)
-- `GET /api/auth/profile` - Get user profile
-- `PUT /api/auth/profile` - Update user profile
-- `POST /api/auth/change-password` - Change password
+All endpoints are under `/api/v1`. Authentication via `Authorization: Bearer <token>` header.
 
-### Customers
-- `GET /api/customers` - List all customers
-- `GET /api/customers/:id` - Get customer by ID
-- `POST /api/customers` - Create new customer
-- `PUT /api/customers/:id` - Update customer
-- `DELETE /api/customers/:id` - Delete customer
-- `PATCH /api/customers/:id/balance` - Update customer balance
+| Module | Prefix | Key Operations |
+|--------|--------|----------------|
+| Auth | `/auth` | login, register, refresh-token, change-password |
+| Users | `/users` | CRUD, stats (admin only) |
+| Customers | `/customers` | CRUD, search, balance management |
+| Invoices | `/invoices` | CRUD, status transitions, line items |
+| Quotes | `/quotes` | CRUD, status transitions, line items |
+| Receipts | `/receipts` | CRUD, payment methods |
+| Items | `/items` | CRUD, SKU lookup, categories |
+| Credit Notes | `/credit-notes` | CRUD (partially implemented) |
+| Chat | `/chat` | Conversations, messages, participants, read receipts |
+| Audit | `/audit` | Query by entity/action/user (admin only) |
 
-### Items
-- `GET /api/items` - List all items
-- `GET /api/items/:id` - Get item by ID
-- `POST /api/items` - Create new item
-- `PUT /api/items/:id` - Update item
-- `DELETE /api/items/:id` - Delete item
-
-### Invoices
-- `GET /api/invoices` - List all invoices
-- `GET /api/invoices/:id` - Get invoice by ID
-- `POST /api/invoices` - Create new invoice
-- `PUT /api/invoices/:id` - Update invoice
-- `DELETE /api/invoices/:id` - Delete invoice
-
-### Quotes
-- `GET /api/quotes` - List all quotes
-- `GET /api/quotes/:id` - Get quote by ID
-- `POST /api/quotes` - Create new quote
-- `PUT /api/quotes/:id` - Update quote
-- `DELETE /api/quotes/:id` - Delete quote
-
-### Receipts
-- `GET /api/receipts` - List all receipts
-- `GET /api/receipts/:id` - Get receipt by ID
-- `POST /api/receipts` - Create new receipt
-- `PUT /api/receipts/:id` - Update receipt
-- `DELETE /api/receipts/:id` - Delete receipt
-
-### Credit Notes
-- `GET /api/credit-notes` - List all credit notes
-- `GET /api/credit-notes/:id` - Get credit note by ID
-- `POST /api/credit-notes` - Create new credit note
-- `PUT /api/credit-notes/:id` - Update credit note
-- `DELETE /api/credit-notes/:id` - Delete credit note
-
-### Audit Logs
-- `GET /api/audit` - List all audit logs
-- `GET /api/audit/:id` - Get audit log by ID
-- `GET /api/audit/:entity/:entityId` - Get audit logs for specific entity
-
-### Chat (Real-Time)
-- `GET /api/chat/conversations` - List user's conversations
-- `POST /api/chat/conversations` - Create new conversation
-- `GET /api/chat/conversations/:id` - Get conversation details
-- `GET /api/chat/conversations/:id/messages` - Get conversation messages
-- `POST /api/chat/conversations/:id/messages` - Send message (also via Socket.IO)
-- `POST /api/chat/messages/:id/read` - Mark message as read
-- `POST /api/chat/review-pins` - Create review pin (link to invoice/quote/receipt)
-- **Socket.IO Events**: `join_conversation`, `send_message`, `new_message`, `message_read`
+Full interactive docs at `/api-docs` (Swagger UI).
 
 ## Project Structure
 
 ```
 Finan/
-├── src/
-│   ├── config/           # Configuration files
-│   │   ├── index.js      # Main config
-│   │   └── swagger.js    # API documentation config
-│   ├── database/         # Database layer
-│   │   ├── models/       # Sequelize models
-│   │   ├── connection.js # Database connection
-│   │   ├── migrate.js    # Migration script
-│   │   └── seed.js       # Seed script
-│   ├── middleware/       # Express middleware
-│   │   ├── auth.js       # Authentication & authorization
-│   │   ├── auditLogger.js # Audit logging
-│   │   └── errorHandler.js # Error handling
-│   ├── modules/          # Feature modules
-│   │   ├── auth/         # Authentication module
-│   │   ├── customers/    # Customer management
-│   │   ├── items/        # Item/product management
-│   │   ├── invoices/     # Invoice management
-│   │   ├── quotes/       # Quote management
-│   │   ├── receipts/     # Receipt management
-│   │   ├── creditNotes/  # Credit note management
-│   │   ├── chat/         # Real-time chat module
-│   │   └── audit/        # Audit log viewing
-│   ├── socket/           # Socket.IO configuration
-│   │   ├── index.js      # Socket.IO setup
-│   │   ├── handlers/     # Socket event handlers
-│   │   └── middleware/   # Socket authentication
-│   ├── routes/           # Route definitions
-│   │   └── index.js      # Main router
-│   └── server.js         # Application entry point
-├── docker-compose.yml    # Docker configuration
-├── package.json          # Dependencies
-├── .env.example          # Environment template
-└── README.md            # Documentation
+├── src/                        # Backend source
+│   ├── server.js               # Entry point (Express + Socket.IO)
+│   ├── config/                 # All configuration (centralized)
+│   ├── database/               # Models, migrations, seeds, rollback
+│   ├── middleware/              # Auth, permissions, error handling, rate limiting, request ID
+│   ├── modules/                # Feature modules (controller + service + routes each)
+│   │   ├── auth, users, customers, invoices, quotes, receipts
+│   │   ├── items, creditNotes, chat, audit
+│   ├── socket/                 # Socket.IO setup, handlers, auth
+│   ├── routes/                 # API v1 route registration
+│   ├── utils/                  # Logger, API responses, permissions, auto-numbering
+│   └── validators/             # express-validator schemas
+├── frontend/                   # React SPA
+│   ├── src/                    # Components, pages, contexts, services
+│   ├── Dockerfile              # Nginx production build
+│   └── nginx.conf              # SPA routing config
+├── tests/                      # Backend tests (333 passing, 45% coverage)
+│   ├── __tests__/              # Test files by module
+│   ├── factories/              # Data factories
+│   └── helpers/                # Test DB utils, auth helpers
+├── docs/                       # Documentation
+│   ├── TECHNICAL_REFERENCE.md  # Full technical guide
+│   ├── PROJECT_ROADMAP.md      # Status & what's next
+│   ├── ARCHITECTURE.md         # System design
+│   └── archive/                # Historical docs
+├── .github/workflows/          # CI/CD pipelines
+├── docker-compose.yml          # Dev + production services
+├── Dockerfile                  # Multi-stage (deps → dev → production)
+└── secrets/                    # Docker secrets for production
 ```
 
-## Role-Based Access Control
+## Roles & Permissions
 
-### Admin
-- Full access to all features
-- Can create/update/delete all entities
-- Can manage users
-- Can view audit logs
+| Role | Access |
+|------|--------|
+| **Admin** | Full access — manage users, view audit logs, all CRUD |
+| **Manager** | Business operations — customers, invoices, quotes, receipts, items, chat |
+| **User** | Basic operations — view/create own records, participate in chat |
 
-### Manager
-- Can create/update customers, items, invoices, quotes, receipts, credit notes
-- Cannot delete major entities
-- Can view audit logs
-- Cannot manage users
+Granular permissions via middleware: `requirePermission()`, `requireRole()`, `requireAdmin`, `requireManagerOrAdmin`.
 
-### User
-- Read-only access to most entities
-- Cannot create/update/delete
-- Limited access to audit logs
-
-## Security Features
-
-- **JWT Authentication**: Secure token-based authentication
-- **Password Hashing**: bcrypt with salt rounds
-- **Rate Limiting**: Prevents brute force attacks
-- **CORS**: Cross-origin resource sharing protection
-- **Helmet**: Security headers
-- **Input Validation**: Request validation and sanitization
-- **Audit Logging**: Complete activity tracking
-
-## Database Schema
-
-The application uses a relational database with the following main entities:
-
-- **Users**: System users with roles
-- **Customers**: Customer profiles with balances
-- **Items**: Product/service catalog
-- **Invoices**: Sales invoices with line items
-- **Quotes**: Sales quotes with line items
-- **Receipts**: Payment receipts
-- **CreditNotes**: Credit notes with line items
-- **ChatConversations**: Chat conversations and participants
-- **ChatMessages**: Real-time messages with attachments
-- **ChatReviewPins**: Links between messages and financial documents
-- **AuditLogs**: Complete audit trail
-
-## Development
-
-### Running in development mode
+## Testing
 
 ```bash
-npm run dev
+npm run test:setup-db    # Create test database (one-time)
+npm test -- --coverage   # Run all 333 tests with coverage
 ```
 
-This uses nodemon for automatic restart on file changes.
+Coverage: 45.55% statement coverage across controllers, services, middleware, and utilities.
 
-### Database operations
+## Security
 
-```bash
-# Run migrations
-npm run db:migrate
+- JWT authentication with configurable expiry
+- bcrypt password hashing
+- Helmet security headers
+- CORS with origin whitelist
+- Rate limiting (configurable window/max)
+- Input validation on all endpoints (express-validator)
+- Audit logging with IP/user agent tracking
+- Request ID correlation (X-Request-ID)
+- Graceful shutdown handling (SIGTERM/SIGINT)
+- Docker secrets for production credentials
+- Non-root container user in production
 
-# Seed database
-npm run db:seed
-```
+## Documentation
 
-## Docker Commands
-
-```bash
-# Start database
-docker-compose up -d
-
-# Stop database
-docker-compose down
-
-# View logs
-docker-compose logs -f
-
-# Remove volumes (destroys data)
-docker-compose down -v
-```
-
-## Future Enhancements
-
-The modular architecture supports easy addition of:
-
-- 📊 **Reporting Module**: Sales reports, customer reports, financial dashboards
-- 💳 **Payment Gateway Integration**: Stripe, PayPal, Razorpay
-- 📧 **Email Notifications**: Invoice sending, payment reminders
-- 📱 **CRM Features**: Lead management, opportunity tracking
-- 🔔 **Push Notifications**: Mobile and desktop notifications
-- 📅 **Scheduling**: Recurring invoices, payment reminders
-- 📤 **Export Features**: PDF generation, Excel exports
-- 🌍 **Multi-currency**: Support for multiple currencies
-- 🎨 **Customization**: Custom fields, templates
-- 💬 **Chat Enhancements**: Message editing/deletion, typing indicators, search, reactions
+| Document | Description |
+|----------|-------------|
+| [docs/TECHNICAL_REFERENCE.md](docs/TECHNICAL_REFERENCE.md) | Full technical guide — how to develop, run, test, deploy |
+| [docs/PROJECT_ROADMAP.md](docs/PROJECT_ROADMAP.md) | Project status, priorities, and roadmap |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System architecture and design patterns |
 
 ## License
 
 ISC
-
-## Support
-
-For issues and questions, please open an issue on GitHub.
