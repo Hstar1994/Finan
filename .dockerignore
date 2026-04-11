@@ -27,8 +27,10 @@ node_modules/
 # Output of 'npm pack'
 *.tgz
 
-# Environment variables
+# Environment variables (use Docker secrets instead)
 .env
+.env.*
+!.env.example
 
 # OS files
 .DS_Store
@@ -46,4 +48,43 @@ dist/
 build/
 
 # Docker
+Dockerfile*
+docker-compose*.yml
 .dockerignore
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+!README.md
+docs/
+archive/
+
+# Tests
+tests/
+__tests__/
+*.test.js
+*.spec.js
+jest.config.js
+.nyc_output
+
+# Frontend (built separately)
+frontend/
+frontend-react/
+
+# Session/progress files
+SESSION_*.md
+CLAUDE_*.md
+CLEANUP_PHASE.md
+SENIOR_ENGINEER_REVIEW.md
+ARCHITECTURE.md
+CHAT_FEATURE_SPEC.md
+
+# Temporary/development files
+*.tmp
+*.temp
+.cache
+tmp/

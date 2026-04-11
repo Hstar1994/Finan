@@ -1,5 +1,6 @@
 const winston = require('winston');
 const path = require('path');
+const config = require('../config');
 
 // Define log format
 const logFormat = winston.format.combine(
@@ -31,7 +32,7 @@ if (!fs.existsSync(logsDir)) {
 
 // Create logger
 const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
+  level: config.logging.level,
   format: logFormat,
   defaultMeta: { service: 'finan-api' },
   transports: [
@@ -62,7 +63,7 @@ const logger = winston.createLogger({
 });
 
 // Add console transport for development
-if (process.env.NODE_ENV !== 'production') {
+if (config.app.env !== 'production') {
   logger.add(
     new winston.transports.Console({
       format: consoleFormat,

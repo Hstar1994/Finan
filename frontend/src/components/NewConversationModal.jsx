@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
-import config from '../config/env'
+import { config } from '../config/env'
 import './NewConversationModal.css'
 
 const NewConversationModal = ({ onClose, onConversationCreated }) => {
@@ -21,18 +21,14 @@ const NewConversationModal = ({ onClose, onConversationCreated }) => {
         })
         if (usersResponse.ok) {
           const usersData = await usersResponse.json()
-          console.log('📋 Full users response:', usersData)
           const usersList = usersData.data?.users || usersData.data || []
-          console.log('📋 Loaded users:', usersList)
           // Filter out current user from the list
           const filteredUsers = usersList.filter(u => u.id !== user?.id)
           setUsers(filteredUsers)
         } else {
-          console.error('Failed to fetch users:', usersResponse.status)
           setError('Failed to load users')
         }
       } catch (err) {
-        console.error('Error fetching users:', err)
         setError('Failed to load users')
       }
     }
@@ -56,8 +52,6 @@ const NewConversationModal = ({ onClose, onConversationCreated }) => {
         participantUserIds: selectedUsers
       }
 
-      console.log('Creating conversation with payload:', payload)
-
       const response = await fetch(`${config.apiUrl}/chat/conversations`, {
         method: 'POST',
         headers: {
@@ -76,7 +70,6 @@ const NewConversationModal = ({ onClose, onConversationCreated }) => {
       onConversationCreated(data.data)
       onClose()
     } catch (err) {
-      console.error('Error creating conversation:', err)
       setError(err.message)
     } finally {
       setIsLoading(false)
@@ -84,12 +77,10 @@ const NewConversationModal = ({ onClose, onConversationCreated }) => {
   }
 
   const toggleUserSelection = (userId) => {
-    console.log('🔄 Toggle user selection:', userId)
     setSelectedUsers(prev => {
       const newSelection = prev.includes(userId)
         ? prev.filter(id => id !== userId)
         : [...prev, userId]
-      console.log('✅ Selected users:', newSelection)
       return newSelection
     })
   }

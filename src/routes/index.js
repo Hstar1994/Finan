@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const config = require('../config');
+const logger = require('../utils/logger');
 
 // Import versioned routes
 const v1Routes = require('./v1');
@@ -22,7 +23,11 @@ router.use('/v1', v1Routes);
 // Log warning for unversioned API access
 router.use('/', (req, res, next) => {
   if (!req.path.startsWith('/health')) {
-    console.warn('⚠️ DEPRECATED: Unversioned API access. Please use /api/v1/ instead');
+    logger.warn('Deprecated API access: Unversioned route used', { 
+      path: req.path,
+      method: req.method,
+      ip: req.ip
+    });
   }
   next();
 }, v1Routes);

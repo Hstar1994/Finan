@@ -1,5 +1,7 @@
 const jwt = require('jsonwebtoken');
 const { User, Customer } = require('../../database/models');
+const config = require('../../config');
+const logger = require('../../utils/logger');
 
 /**
  * Socket.IO authentication middleware
@@ -15,7 +17,7 @@ const authenticateSocket = async (socket, next) => {
     }
 
     // Verify JWT token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, config.jwt.secret);
 
     // Determine actor type (staff vs customer)
     const isCustomer = decoded.type === 'customer';
@@ -43,7 +45,7 @@ const authenticateSocket = async (socket, next) => {
       const userId = decoded.userId || decoded.id;
       
       // Debug logging
-      console.log('🔍 Socket.IO Auth Debug:', {
+      logger.debug('Socket.IO staff authentication attempt', {
         decodedKeys: Object.keys(decoded),
         userId,
         hasId: !!decoded.id,
@@ -53,7 +55,7 @@ const authenticateSocket = async (socket, next) => {
       const user = await User.findByPk(userId);
       
       if (!user) {
-        console.log('❌ User not found in database:', userId);
+        logger.warn('Socket.IO authentication failed: User not found', { userId });
         return next(new Error('User not found'));
       }
 

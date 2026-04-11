@@ -1,4 +1,5 @@
 const ApiResponse = require('../utils/apiResponse');
+const config = require('../config');
 
 const errorHandler = (err, req, res, next) => {
   console.error('Error:', err);
@@ -36,7 +37,7 @@ const errorHandler = (err, req, res, next) => {
   return ApiResponse.serverError(
     res, 
     err.message || 'Internal server error',
-    process.env.NODE_ENV === 'development' ? err : null
+    config.app.env === 'development' ? err : null
   );
 };
 

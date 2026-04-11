@@ -1,5 +1,6 @@
 const { sequelize } = require('../database/connection');
 const { QueryTypes } = require('sequelize');
+const logger = require('./logger');
 
 /**
  * Generate next invoice number using PostgreSQL sequence
@@ -21,7 +22,9 @@ const generateInvoiceNumber = async (transaction = null) => {
     return `INV-${String(num).padStart(6, '0')}`;
   } catch (error) {
     // If sequence doesn't exist, fall back to count-based (shouldn't happen if init-sequences ran)
-    console.error('Sequence not found, falling back to count-based generation:', error.message);
+    logger.error('Invoice number sequence not found, falling back to count-based generation', { 
+      error: error.message 
+    });
     const { Invoice } = require('../database/models');
     const count = await Invoice.count({ transaction });
     return `INV-${String(count + 1).padStart(6, '0')}`;
@@ -48,7 +51,9 @@ const generateReceiptNumber = async (transaction = null) => {
     return `REC-${String(num).padStart(6, '0')}`;
   } catch (error) {
     // If sequence doesn't exist, fall back to count-based (shouldn't happen if init-sequences ran)
-    console.error('Sequence not found, falling back to count-based generation:', error.message);
+    logger.error('Receipt number sequence not found, falling back to count-based generation', { 
+      error: error.message 
+    });
     const { Receipt } = require('../database/models');
     const count = await Receipt.count({ transaction });
     return `REC-${String(count + 1).padStart(6, '0')}`;

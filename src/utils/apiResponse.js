@@ -3,6 +3,8 @@
  * Provides consistent response format across all endpoints
  */
 
+const config = require('../config');
+
 class ApiResponse {
   /**
    * Success response
@@ -118,7 +120,7 @@ class ApiResponse {
     };
 
     // Only include error details in development
-    if (process.env.NODE_ENV === 'development' && error) {
+    if (config.app.env === 'development' && error) {
       response.error = {
         message: error.message,
         stack: error.stack,

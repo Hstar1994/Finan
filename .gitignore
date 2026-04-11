@@ -15,3 +15,7 @@ coverage/
 *~
 .tmp/
 logs/
+
+# Docker secrets (keep .example files)
+secrets/*.txt
+!secrets/*.txt.example
