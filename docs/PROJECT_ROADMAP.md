@@ -1,10 +1,10 @@
 # Finan - Project Roadmap & Status
 
-> Single source of truth for project progress. Updated April 11, 2026.
+> Single source of truth for project progress. Updated April 12, 2026.
 
-**Current Branch**: `feature/cleanup-phase-improvements`  
-**Last Commit**: `9f33501` — Sprint 3: Production Hardening COMPLETE  
-**Last Active Session**: January 15, 2026  
+**Current Branch**: `main`  
+**Last Commit**: `6f9b139` — chore: fix docker-compose and add remaining test files  
+**Last Active Session**: April 12, 2026  
 **Tech Stack**: Node.js / Express / PostgreSQL / Sequelize / React 18 / Vite / Socket.IO / Docker
 
 ---
@@ -24,7 +24,7 @@
 | React Frontend              | ✅ Complete  | All pages, responsive, protected routes  |
 | Docker Deployment           | ✅ Complete  | Multi-stage, secrets, health checks      |
 | Cleanup Phase (Sprints 1-3) | ✅ Complete  | 12/12 tasks done                         |
-| Test Coverage               | 🟡 45.55%   | 333 tests passing, target was 70%+       |
+| Test Coverage               | ✅ 71.37%   | 565 tests passing, 76% branch coverage   |
 | Credit Notes                | ❌ Not Started | Models exist, no endpoints/UI          |
 | Reports & Analytics         | ❌ Not Started | No reports, export, or charts          |
 | Sprint 4 (Perf/Monitoring)  | ❌ Not Started | Redis, query optimization, Prometheus  |
@@ -90,33 +90,36 @@
 
 Prioritized from most impactful to optional. Pick the next focus area.
 
-### Priority 1 — Merge & Remaining Cleanup (branch housekeeping)
+### ~~Priority 1 — Merge & Remaining Cleanup~~ ✅ DONE (April 12, 2026)
 
-The `feature/cleanup-phase-improvements` branch has 12 completed tasks that haven't been merged to `main` yet. Before starting new work:
+- [x] Merged `feature/cleanup-phase-improvements` → `main` (Sprints 1-3, 12/12 tasks)
+- [x] Merged `feature/raise-test-coverage` → `main` via safe `integration/test-merge` branch
+- [x] Fixed `docker-compose.yml` (invalid secrets entry, hardcoded LAN IP)
+- [x] `backup/main-pre-merge` branch preserved as rollback point
+- [ ] Delete stale branches — still pending
+- [ ] Fix linter warnings — not yet checked
+- [ ] Update README.md — still outdated
 
-- [ ] **Merge cleanup branch to main** — all 12 tasks, 333 tests, production hardening
-- [ ] **Delete stale branches** — `feature/phase2-backend-improvements` and others that were merged
-- [ ] **Fix linter warnings** — not yet checked/resolved
-- [ ] **Update README.md** — currently outdated per cleanup phase definition of done
-- [ ] **Update API docs** — ensure Swagger reflects current state
+### ~~Priority 2 — Raise Test Coverage (45% → 70%+)~~ ✅ DONE (April 12, 2026)
 
-### Priority 2 — Raise Test Coverage (45% → 70%+)
+Achieved **71.37% statements / 76.07% branches** (up from 45.25%).
 
-Currently at 45.55%. Untested areas identified in the senior review:
+| Test File Added | Tests | Coverage Impact |
+|---|---|---|
+| quotes/controller.test.js | 22 | ~2% |
+| middleware/auditLogger.test.js | 13 | ~1% |
+| middleware/chatAuth.test.js | 25 | ~2% |
+| middleware/rateLimiter.test.js | 8 | <1% |
+| middleware/requestId.test.js | 12 | ~1% |
+| socket/auth.test.js | 13 | ~1% |
+| socket/chatHandlers.test.js | 22 | ~2% |
+| validators/common.test.js | 20 | ~1% |
+| creditNotes/controller.test.js | 22 | ~2.6% |
+| audit/controller.test.js | 17 | ~1.6% |
+| auth/customerAuth.controller.test.js | 25 | ~2.4% |
+| chat/controller.test.js | 33 | ~5.1% |
 
-| Area | Current Coverage | What's Missing |
-|------|-----------------|----------------|
-| Controllers | ~33% | Quotes controller, Credit Notes |
-| Socket.IO handlers | 0% | `chat.handlers.js` event tests |
-| Models | 0% | Business logic methods, validations |
-| Middleware | ~partial | `rateLimiter.js`, `chatAuth.js` |
-| Frontend components | 0% | No React Testing Library tests |
-
-Quick wins to reach 70%:
-- [ ] Quote controller tests
-- [ ] Socket.IO handler tests
-- [ ] Model validation tests
-- [ ] Additional middleware tests
+**Total: 232 new tests added. 565 passing.**
 
 ### Priority 3 — Credit Notes Module (New Feature)
 
@@ -188,8 +191,11 @@ Long-term roadmap items:
 
 | Branch | Purpose | Status |
 |--------|---------|--------|
-| `main` | Production baseline | Last merged: Chat feature (Dec 29, 2025) |
-| `feature/cleanup-phase-improvements` ⬅ **CURRENT** | Cleanup sprints 1-3 | ✅ Complete, **needs merge to main** |
+| `main` ⬅ **CURRENT** | Production baseline | Last updated: April 12, 2026 — 565 tests, 71.37% coverage |
+| `backup/main-pre-merge` | Safety snapshot | Pre-coverage-merge state (April 12, 2026) |
+| `feature/raise-test-coverage` | Coverage sprint | ✅ Merged to main |
+| `integration/test-merge` | Staging merge branch | ✅ Merged to main |
+| `feature/cleanup-phase-improvements` | Cleanup sprints 1-3 | ✅ Merged to main |
 | `feature/chat-module` | Chat implementation | ✅ Merged to main |
 | `feature/backend-testing` | Initial test setup | ✅ Merged |
 | `feature/code-review-fixes` | Review fixes | ✅ Merged |
@@ -203,8 +209,9 @@ Long-term roadmap items:
 
 | Metric | Value | Target |
 |--------|-------|--------|
-| Test coverage | 45.55% | 70%+ |
-| Passing tests | 333 | — |
+| Statement coverage | 71.37% | 70%+ ✅ |
+| Branch coverage | 76.07% | — ✅ |
+| Passing tests | 565 | — |
 | Console.log in prod code | 0 | 0 ✅ |
 | Security score (estimated) | 85/100 | 95/100 |
 | Production readiness | ~95% | 95%+ ✅ |
@@ -228,11 +235,22 @@ All documentation lives in `docs/`. Here's what each file covers:
 
 ---
 
+## Session Log
+
+### April 12, 2026
+- Raised test coverage from 45.25% → **71.37% statements / 76.07% branches**
+- Added 232 new tests across 12 test files (565 total passing)
+- Created `backup/main-pre-merge` safety branch before merging
+- Merged via `integration/test-merge` staging branch (verified clean before final merge)
+- Fixed `docker-compose.yml`: removed `node_modules` from `secrets`, changed hardcoded LAN IP `192.168.8.12` to `localhost` for VITE_API_URL and CORS
+- Created `secrets/db_password.txt` and `secrets/jwt_secret.txt` placeholder files
+- Ran `db:migrate` + `db:seed` to bring up a fresh DB in Docker
+- App running and verified at http://localhost:8080
+
 ## Suggested Next Session
 
-1. **Merge `feature/cleanup-phase-improvements` → `main`** (all work is committed and passing)
-2. Pick one of Priority 2-4 as the next focus:
-   - **Quick**: Raise test coverage to 70% (Priority 2) — ~1-2 days
-   - **Feature**: Credit Notes module (Priority 3) — ~3-5 days
-   - **Feature**: Reports & Analytics (Priority 4) — ~5-7 days
-3. Create a new feature branch from updated `main`
+Pick one of the remaining priorities:
+- **Quick** (~2 hrs): Security quick wins — CSP headers, response compression, rate limit response headers (Priority 6)
+- **Feature** (~3-5 days): Credit Notes module — service, routes, frontend UI (Priority 3)
+- **Feature** (~5-7 days): Reports & Analytics — revenue/aging reports, charts, PDF export (Priority 4)
+- **Cleanup**: Delete stale branches, fix linter warnings, update README.md
