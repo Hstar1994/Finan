@@ -2,6 +2,7 @@ const express = require('express');
 const http = require('http');
 const cors = require('cors');
 const helmet = require('helmet');
+const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const config = require('./config');
 const { sequelize, testConnection } = require('./database/connection');
@@ -21,7 +22,19 @@ let isShuttingDown = false;
 let io = null;
 
 // Security middleware
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    useDefaults: true,
+    directives: {
+      "default-src": ["'self'"],
+      "base-uri": ["'self'"],
+      "object-src": ["'none'"],
+      "script-src": ["'self'", "'unsafe-inline'"],
+      "style-src": ["'self'", "'unsafe-inline'"],
+      "img-src": ["'self'", 'data:', 'https:']
+    }
+  }
+}));
 
 // Request ID middleware (must be early for correlation)
 app.use(requestIdMiddleware);
@@ -64,6 +77,9 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+// Response compression for improved payload performance
+app.use(compression());
+
 // Request logging middleware (before routes)
 app.use(requestLogger);
 
@@ -71,7 +87,9 @@ app.use(requestLogger);
 const limiter = rateLimit({
   windowMs: config.rateLimit.windowMs,
   max: config.rateLimit.max,
-  message: 'Too many requests from this IP, please try again later.'
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false
 });
 app.use('/api/', limiter);
 

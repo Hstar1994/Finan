@@ -1,10 +1,10 @@
 # Finan - Project Roadmap & Status
 
-> Single source of truth for project progress. Updated April 12, 2026.
+> Single source of truth for project progress. Updated April 22, 2026.
 
 **Current Branch**: `main`  
 **Last Commit**: `6f9b139` — chore: fix docker-compose and add remaining test files  
-**Last Active Session**: April 12, 2026  
+**Last Active Session**: April 22, 2026  
 **Tech Stack**: Node.js / Express / PostgreSQL / Sequelize / React 18 / Vite / Socket.IO / Docker
 
 ---
@@ -154,9 +154,9 @@ From the cleanup phase plan — not started:
 
 From senior engineer review — small effort, good impact:
 
-- [ ] Add Content Security Policy (CSP) headers to Helmet config
-- [ ] Enable standard rate limit response headers
-- [ ] Add response compression (`compression` middleware)
+- [x] Add Content Security Policy (CSP) headers to Helmet config
+- [x] Enable standard rate limit response headers
+- [x] Add response compression (`compression` middleware)
 - [ ] Load testing before any production deployment
 
 ### Priority 7 — Chat Phase 2 (Feature Enhancement)
@@ -236,6 +236,15 @@ All documentation lives in `docs/`. Here's what each file covers:
 ---
 
 ## Session Log
+
+### April 22, 2026
+- Continued from April 12 roadmap checkpoint
+- Implemented Security Quick Wins (Priority 6):
+	- Added explicit Helmet CSP directives in `src/server.js`
+	- Enabled response compression middleware (`compression`)
+	- Enabled standard rate-limit headers and disabled legacy rate-limit headers for API limiter
+- Installed backend dependency: `compression@^1.8.1`
+- Validation: `tests/__tests__/middleware/rateLimiter.test.js` passing (8/8)
 
 ### April 12, 2026
 - Raised test coverage from 45.25% → **71.37% statements / 76.07% branches**
