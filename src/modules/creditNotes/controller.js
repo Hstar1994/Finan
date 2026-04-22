@@ -1,60 +1,37 @@
-const { CreditNote, CreditNoteItem, Customer, Invoice, Item } = require('../../database/models');
-
-const generateCreditNoteNumber = async () => {
-  const count = await CreditNote.count();
-  return `CN-${String(count + 1).padStart(6, '0')}`;
-};
+const logger = require('../../utils/logger');
+const ApiResponse = require('../../utils/apiResponse');
+const creditNoteService = require('./service');
 
 const getAll = async (req, res, next) => {
   try {
     const { page = 1, limit = 10, status, customerId } = req.query;
-    const offset = (page - 1) * limit;
     
-    const where = {};
-    if (status) where.status = status;
-    if (customerId) where.customerId = customerId;
-    
-    const { count, rows } = await CreditNote.findAndCountAll({
-      where,
-      limit: parseInt(limit),
-      offset: parseInt(offset),
-      include: [
-        { model: Customer, as: 'customer', attributes: ['id', 'name', 'email'] },
-        { model: CreditNoteItem, as: 'items' }
-      ],
-      order: [['createdAt', 'DESC']]
-    });
-    
-    res.json({
-      creditNotes: rows,
-      pagination: {
-        total: count,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        totalPages: Math.ceil(count / limit)
-      }
-    });
+    const filters = {};
+    if (status) filters.status = status;
+    if (customerId) filters.customerId = customerId;
+
+    const result = await creditNoteService.getAllCreditNotes(
+      parseInt(page),
+      parseInt(limit),
+      filters
+    );
+
+    ApiResponse.success(res, result, 'Credit notes fetched successfully');
   } catch (error) {
+    logger.error('Error fetching credit notes', { error: error.message });
     next(error);
   }
 };
 
 const getById = async (req, res, next) => {
   try {
-    const creditNote = await CreditNote.findByPk(req.params.id, {
-      include: [
-        { model: Customer, as: 'customer' },
-        { model: Invoice, as: 'invoice' },
-        { model: CreditNoteItem, as: 'items', include: [{ model: Item, as: 'item' }] }
-      ]
-    });
-    
-    if (!creditNote) {
-      return res.status(404).json({ error: 'Credit note not found' });
-    }
-    
-    res.json({ creditNote });
+    const creditNote = await creditNoteService.getCreditNoteById(req.params.id);
+    ApiResponse.success(res, { creditNote }, 'Credit note fetched successfully');
   } catch (error) {
+    logger.error('Error fetching credit note', { error: error.message, creditNoteId: req.params.id });
+    if (error.message.includes('not found')) {
+      return ApiResponse.notFound(res, 'Credit note not found');
+    }
     next(error);
   }
 };
@@ -62,91 +39,81 @@ const getById = async (req, res, next) => {
 const create = async (req, res, next) => {
   try {
     const { customerId, invoiceId, items, reason, notes } = req.body;
-    
-    if (!customerId || !items || items.length === 0) {
-      return res.status(400).json({ error: 'Customer and items are required' });
-    }
-    
-    let subtotal = 0;
-    let taxAmount = 0;
-    
-    items.forEach(item => {
-      const amount = parseFloat(item.quantity) * parseFloat(item.unitPrice);
-      const tax = amount * (parseFloat(item.taxRate || 0) / 100);
-      subtotal += amount;
-      taxAmount += tax;
-    });
-    
-    const totalAmount = subtotal + taxAmount;
-    const creditNoteNumber = await generateCreditNoteNumber();
-    
-    const creditNote = await CreditNote.create({
-      creditNoteNumber,
+
+    const creditNote = await creditNoteService.createCreditNote(
       customerId,
       invoiceId,
-      issueDate: new Date(),
-      subtotal,
-      taxAmount,
-      totalAmount,
+      items,
       reason,
       notes,
-      createdBy: req.user.id
-    });
-    
-    const creditNoteItems = await Promise.all(
-      items.map(item => 
-        CreditNoteItem.create({
-          creditNoteId: creditNote.id,
-          itemId: item.itemId,
-          description: item.description,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          taxRate: item.taxRate || 0,
-          amount: parseFloat(item.quantity) * parseFloat(item.unitPrice)
-        })
-      )
+      req.user.id
     );
-    
-    res.status(201).json({ 
-      message: 'Credit note created successfully', 
-      creditNote: {
-        ...creditNote.toJSON(),
-        items: creditNoteItems
-      }
-    });
+
+    ApiResponse.created(res, { creditNote }, 'Credit note created successfully');
   } catch (error) {
+    logger.error('Error creating credit note', { error: error.message });
     next(error);
   }
 };
 
 const update = async (req, res, next) => {
   try {
-    const creditNote = await CreditNote.findByPk(req.params.id);
-    
-    if (!creditNote) {
-      return res.status(404).json({ error: 'Credit note not found' });
-    }
-    
-    await creditNote.update(req.body);
-    res.json({ message: 'Credit note updated successfully', creditNote });
+    const creditNote = await creditNoteService.updateCreditNote(req.params.id, req.body);
+    ApiResponse.success(res, { creditNote }, 'Credit note updated successfully');
   } catch (error) {
+    logger.error('Error updating credit note', { error: error.message, creditNoteId: req.params.id });
+    if (error.message.includes('not found')) {
+      return ApiResponse.notFound(res, 'Credit note not found');
+    }
+    next(error);
+  }
+};
+
+const applyCreditToInvoice = async (req, res, next) => {
+  try {
+    const { invoiceId } = req.body;
+    
+    const result = await creditNoteService.applyCreditNote(req.params.id, invoiceId);
+    
+    logger.info('Credit note applied to invoice', {
+      creditNoteId: req.params.id,
+      invoiceId
+    });
+
+    ApiResponse.success(res, result, 'Credit note applied to invoice successfully');
+  } catch (error) {
+    logger.error('Error applying credit note', { error: error.message, creditNoteId: req.params.id });
+    if (error.message.includes('not found')) {
+      return ApiResponse.notFound(res, error.message);
+    }
+    if (error.message.includes('status')) {
+      return ApiResponse.error(res, error.message, null, 400);
+    }
     next(error);
   }
 };
 
 const remove = async (req, res, next) => {
   try {
-    const creditNote = await CreditNote.findByPk(req.params.id);
-    
-    if (!creditNote) {
-      return res.status(404).json({ error: 'Credit note not found' });
-    }
-    
-    await creditNote.destroy();
-    res.json({ message: 'Credit note deleted successfully' });
+    const result = await creditNoteService.deleteCreditNote(req.params.id);
+    ApiResponse.success(res, result, 'Credit note deleted successfully');
   } catch (error) {
+    logger.error('Error deleting credit note', { error: error.message, creditNoteId: req.params.id });
+    if (error.message.includes('not found')) {
+      return ApiResponse.notFound(res, 'Credit note not found');
+    }
+    if (error.message.includes('Cannot delete')) {
+      return ApiResponse.error(res, error.message, null, 400);
+    }
     next(error);
   }
 };
 
-module.exports = { getAll, getById, create, update, remove };
+module.exports = {
+  getAll,
+  getById,
+  create,
+  update,
+  applyCreditToInvoice,
+  remove
+};

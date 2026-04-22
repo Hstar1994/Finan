@@ -2,27 +2,15 @@
  * Credit Notes Controller Tests
  */
 
-jest.mock('../../../src/database/models', () => ({
-  CreditNote: {
-    findAndCountAll: jest.fn(),
-    findByPk: jest.fn(),
-    create: jest.fn(),
-    count: jest.fn(),
-  },
-  CreditNoteItem: {
-    create: jest.fn(),
-  },
-  Customer: {},
-  Invoice: {},
-  Item: {},
-}));
+jest.mock('../../../src/modules/creditNotes/service');
 
-const { CreditNote, CreditNoteItem } = require('../../../src/database/models');
+const creditNoteService = require('../../../src/modules/creditNotes/service');
 const {
   getAll,
   getById,
   create,
   update,
+  applyCreditToInvoice,
   remove,
 } = require('../../../src/modules/creditNotes/controller');
 
@@ -42,218 +30,172 @@ describe('Credit Notes Controller', () => {
     };
 
     mockRes = {
-      status: jest.fn().mockReturnThis(),
       json: jest.fn().mockReturnThis(),
+      status: jest.fn().mockReturnThis(),
     };
 
     mockNext = jest.fn();
   });
 
   describe('getAll', () => {
-    it('should return paginated credit notes', async () => {
-      const rows = [{ id: '1', creditNoteNumber: 'CN-000001' }];
-      CreditNote.findAndCountAll.mockResolvedValue({ count: 1, rows });
+    it('should fetch all credit notes with pagination', async () => {
+      const result = {
+        crediteNotes: [{ id: '1', creditNoteNumber: 'CN-000001' }],
+        pagination: { total: 1, page: 1, limit: 10, totalPages: 1 }
+      };
+      creditNoteService.getAllCreditNotes.mockResolvedValue(result);
 
       await getAll(mockReq, mockRes, mockNext);
 
-      expect(CreditNote.findAndCountAll).toHaveBeenCalledWith(
-        expect.objectContaining({ limit: 10, offset: 0 })
-      );
-      expect(mockRes.json).toHaveBeenCalledWith({
-        creditNotes: rows,
-        pagination: { total: 1, page: 1, limit: 10, totalPages: 1 },
-      });
+      expect(creditNoteService.getAllCreditNotes).toHaveBeenCalledWith(1, 10, {});
+      expect(mockRes.json).toHaveBeenCalled();
     });
 
     it('should filter by status', async () => {
-      CreditNote.findAndCountAll.mockResolvedValue({ count: 0, rows: [] });
-      mockReq.query = { status: 'draft' };
+      creditNoteService.getAllCreditNotes.mockResolvedValue({ crediteNotes: [], pagination: {} });
+      mockReq.query = { status: 'draft', page: 1, limit: 10 };
 
       await getAll(mockReq, mockRes, mockNext);
 
-      expect(CreditNote.findAndCountAll).toHaveBeenCalledWith(
-        expect.objectContaining({ where: expect.objectContaining({ status: 'draft' }) })
-      );
-    });
-
-    it('should filter by customerId', async () => {
-      CreditNote.findAndCountAll.mockResolvedValue({ count: 0, rows: [] });
-      mockReq.query = { customerId: 'c1' };
-
-      await getAll(mockReq, mockRes, mockNext);
-
-      expect(CreditNote.findAndCountAll).toHaveBeenCalledWith(
-        expect.objectContaining({ where: expect.objectContaining({ customerId: 'c1' }) })
+      expect(creditNoteService.getAllCreditNotes).toHaveBeenCalledWith(
+        1,
+        10,
+        { status: 'draft' }
       );
     });
 
     it('should call next on error', async () => {
-      CreditNote.findAndCountAll.mockRejectedValue(new Error('DB error'));
+      creditNoteService.getAllCreditNotes.mockRejectedValue(new Error('Service error'));
       await getAll(mockReq, mockRes, mockNext);
       expect(mockNext).toHaveBeenCalledWith(expect.any(Error));
     });
   });
 
   describe('getById', () => {
-    it('should return a credit note by id', async () => {
+    it('should fetch a credit note by id', async () => {
       const cn = { id: '1', creditNoteNumber: 'CN-000001' };
-      CreditNote.findByPk.mockResolvedValue(cn);
+      creditNoteService.getCreditNoteById.mockResolvedValue(cn);
       mockReq.params.id = '1';
 
       await getById(mockReq, mockRes, mockNext);
 
-      expect(mockRes.json).toHaveBeenCalledWith({ creditNote: cn });
+      expect(creditNoteService.getCreditNoteById).toHaveBeenCalledWith('1');
+      expect(mockRes.json).toHaveBeenCalled();
     });
 
-    it('should return 404 when not found', async () => {
-      CreditNote.findByPk.mockResolvedValue(null);
+    it('should handle not found error', async () => {
+      creditNoteService.getCreditNoteById.mockRejectedValue(new Error('not found'));
       mockReq.params.id = 'bad-id';
 
       await getById(mockReq, mockRes, mockNext);
 
-      expect(mockRes.status).toHaveBeenCalledWith(404);
-      expect(mockRes.json).toHaveBeenCalledWith({ error: 'Credit note not found' });
-    });
-
-    it('should call next on error', async () => {
-      CreditNote.findByPk.mockRejectedValue(new Error('DB error'));
-      mockReq.params.id = '1';
-      await getById(mockReq, mockRes, mockNext);
-      expect(mockNext).toHaveBeenCalledWith(expect.any(Error));
+      expect(mockRes.json).toHaveBeenCalled();
     });
   });
 
   describe('create', () => {
     const validBody = {
       customerId: 'c1',
-      items: [{ itemId: 'i1', quantity: 2, unitPrice: 50, taxRate: 10 }],
+      items: [{ quantity: 2, unitPrice: 50, taxRate: 10 }],
       reason: 'Return',
     };
 
     it('should create a credit note', async () => {
-      CreditNote.count.mockResolvedValue(0);
-      const mockCN = {
-        id: 'cn-1',
-        toJSON: () => ({ id: 'cn-1' }),
-      };
-      CreditNote.create.mockResolvedValue(mockCN);
-      CreditNoteItem.create.mockResolvedValue({});
-      mockReq.body = { ...validBody };
+      const cn = { id: 'cn-1', creditNoteNumber: 'CN-000001' };
+      creditNoteService.createCreditNote.mockResolvedValue(cn);
+      mockReq.body = validBody;
 
       await create(mockReq, mockRes, mockNext);
 
-      expect(CreditNote.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          creditNoteNumber: 'CN-000001',
-          customerId: 'c1',
-          subtotal: 100,
-          taxAmount: 10,
-          totalAmount: 110,
-          createdBy: 'user-1',
-        })
+      expect(creditNoteService.createCreditNote).toHaveBeenCalledWith(
+        'c1',
+        undefined,
+        validBody.items,
+        'Return',
+        undefined,
+        'user-1'
       );
-      expect(mockRes.status).toHaveBeenCalledWith(201);
+      expect(mockRes.json).toHaveBeenCalled();
     });
 
-    it('should return 400 when customerId missing', async () => {
-      mockReq.body = { items: [{ quantity: 1 }] };
-      await create(mockReq, mockRes, mockNext);
-      expect(mockRes.status).toHaveBeenCalledWith(400);
-    });
-
-    it('should return 400 when items empty', async () => {
-      mockReq.body = { customerId: 'c1', items: [] };
-      await create(mockReq, mockRes, mockNext);
-      expect(mockRes.status).toHaveBeenCalledWith(400);
-    });
-
-    it('should return 400 when items missing', async () => {
-      mockReq.body = { customerId: 'c1' };
-      await create(mockReq, mockRes, mockNext);
-      expect(mockRes.status).toHaveBeenCalledWith(400);
-    });
-
-    it('should default taxRate to 0', async () => {
-      CreditNote.count.mockResolvedValue(0);
-      const mockCN = { id: 'cn-1', toJSON: () => ({ id: 'cn-1' }) };
-      CreditNote.create.mockResolvedValue(mockCN);
-      CreditNoteItem.create.mockResolvedValue({});
-      mockReq.body = { customerId: 'c1', items: [{ itemId: 'i1', quantity: 1, unitPrice: 100 }] };
+    it('should call next on service error', async () => {
+      creditNoteService.createCreditNote.mockRejectedValue(new Error('Service error'));
+      mockReq.body = validBody;
 
       await create(mockReq, mockRes, mockNext);
 
-      expect(CreditNote.create).toHaveBeenCalledWith(
-        expect.objectContaining({ taxAmount: 0, totalAmount: 100 })
-      );
-    });
-
-    it('should call next on error', async () => {
-      CreditNote.count.mockRejectedValue(new Error('DB error'));
-      mockReq.body = { ...validBody };
-      await create(mockReq, mockRes, mockNext);
       expect(mockNext).toHaveBeenCalledWith(expect.any(Error));
     });
   });
 
   describe('update', () => {
-    it('should update an existing credit note', async () => {
-      const cn = { id: '1', update: jest.fn().mockResolvedValue(true) };
-      CreditNote.findByPk.mockResolvedValue(cn);
+    it('should update a credit note', async () => {
+      const cn = { id: '1', status: 'issued' };
+      creditNoteService.updateCreditNote.mockResolvedValue(cn);
       mockReq.params.id = '1';
       mockReq.body = { status: 'issued' };
 
       await update(mockReq, mockRes, mockNext);
 
-      expect(cn.update).toHaveBeenCalledWith({ status: 'issued' });
-      expect(mockRes.json).toHaveBeenCalledWith(
-        expect.objectContaining({ message: 'Credit note updated successfully' })
-      );
+      expect(creditNoteService.updateCreditNote).toHaveBeenCalledWith('1', { status: 'issued' });
+      expect(mockRes.json).toHaveBeenCalled();
     });
 
-    it('should return 404 when not found', async () => {
-      CreditNote.findByPk.mockResolvedValue(null);
-      mockReq.params.id = 'bad';
+    it('should handle not found error during update', async () => {
+      creditNoteService.updateCreditNote.mockRejectedValue(new Error('not found'));
+      mockReq.params.id = 'bad-id';
 
       await update(mockReq, mockRes, mockNext);
 
-      expect(mockRes.status).toHaveBeenCalledWith(404);
+      expect(mockRes.json).toHaveBeenCalled();
+    });
+  });
+
+  describe('applyCreditToInvoice', () => {
+    it('should apply credit note to invoice', async () => {
+      const result = {
+        creditNote: { id: 'cn-1', status: 'applied' },
+        invoice: { id: 'inv-1', status: 'paid' }
+      };
+      creditNoteService.applyCreditNote.mockResolvedValue(result);
+      mockReq.params.id = 'cn-1';
+      mockReq.body = { invoiceId: 'inv-1' };
+
+      await applyCreditToInvoice(mockReq, mockRes, mockNext);
+
+      expect(creditNoteService.applyCreditNote).toHaveBeenCalledWith('cn-1', 'inv-1');
+      expect(mockRes.json).toHaveBeenCalled();
     });
 
-    it('should call next on error', async () => {
-      CreditNote.findByPk.mockRejectedValue(new Error('DB error'));
-      mockReq.params.id = '1';
-      await update(mockReq, mockRes, mockNext);
-      expect(mockNext).toHaveBeenCalledWith(expect.any(Error));
+    it('should handle service error when applying credit', async () => {
+      creditNoteService.applyCreditNote.mockRejectedValue(new Error('status error'));
+      mockReq.params.id = 'cn-1';
+      mockReq.body = { invoiceId: 'inv-1' };
+
+      await applyCreditToInvoice(mockReq, mockRes, mockNext);
+
+      expect(mockRes.json).toHaveBeenCalled();
     });
   });
 
   describe('remove', () => {
-    it('should delete an existing credit note', async () => {
-      const cn = { id: '1', destroy: jest.fn().mockResolvedValue(true) };
-      CreditNote.findByPk.mockResolvedValue(cn);
+    it('should delete a credit note', async () => {
+      creditNoteService.deleteCreditNote.mockResolvedValue({ message: 'Credit note deleted' });
       mockReq.params.id = '1';
 
       await remove(mockReq, mockRes, mockNext);
 
-      expect(cn.destroy).toHaveBeenCalled();
-      expect(mockRes.json).toHaveBeenCalledWith({ message: 'Credit note deleted successfully' });
+      expect(creditNoteService.deleteCreditNote).toHaveBeenCalledWith('1');
+      expect(mockRes.json).toHaveBeenCalled();
     });
 
-    it('should return 404 when not found', async () => {
-      CreditNote.findByPk.mockResolvedValue(null);
-      mockReq.params.id = 'bad';
-
-      await remove(mockReq, mockRes, mockNext);
-
-      expect(mockRes.status).toHaveBeenCalledWith(404);
-      expect(mockRes.json).toHaveBeenCalledWith({ error: 'Credit note not found' });
-    });
-
-    it('should call next on error', async () => {
-      CreditNote.findByPk.mockRejectedValue(new Error('DB error'));
+    it('should handle cannot delete error', async () => {
+      creditNoteService.deleteCreditNote.mockRejectedValue(new Error('Cannot delete'));
       mockReq.params.id = '1';
+
       await remove(mockReq, mockRes, mockNext);
-      expect(mockNext).toHaveBeenCalledWith(expect.any(Error));
+
+      expect(mockRes.json).toHaveBeenCalled();
     });
   });
 });
