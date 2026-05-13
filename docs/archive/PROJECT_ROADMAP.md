@@ -121,16 +121,20 @@ Achieved **71.37% statements / 76.07% branches** (up from 45.25%).
 
 **Total: 232 new tests added. 565 passing.**
 
-### Priority 3 — Credit Notes Module (New Feature)
+### Priority 3 — Credit Notes Module (In Progress)
 
 Model files exist but no endpoints or UI. Requirement: handle refunds and credits.
 
-- [ ] Credit note CRUD endpoints (controller + service + routes)
-- [ ] Link credit notes to invoices
-- [ ] Invoice total adjustments when credit applied
-- [ ] Credit note validators
-- [ ] Frontend UI page
-- [ ] Tests
+- [x] Credit note CRUD endpoints (controller + service + routes)
+- [x] Link credit notes to invoices
+- [x] Invoice total adjustments when credit applied
+- [x] Credit note validators
+- [ ] Frontend UI page (partial; needs full create/apply/delete UX integration)
+- [ ] Tests (controller tests passing; service tests still failing)
+
+**Latest status (April 22, 2026, feature branch `feature/credit-notes-module`):**
+- Controller tests: `13/13` passing (`tests/__tests__/creditNotes/controller.test.js`)
+- Service tests: `3` failures remain in `tests/__tests__/creditNotes/service.test.js`
 
 ### Priority 4 — Reports & Analytics (New Feature)
 

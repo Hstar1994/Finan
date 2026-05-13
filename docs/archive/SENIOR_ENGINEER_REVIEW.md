@@ -5,6 +5,45 @@
 
 ---
 
+## 🆕 ADDENDUM — APRIL 22, 2026 (Credit Notes Module Work Session)
+
+### Work Completed
+- ✅ Implemented `src/modules/creditNotes/service.js` with transaction-based business logic:
+  - `generateCreditNoteNumber`
+  - `createCreditNote`
+  - `applyCreditNote`
+  - `getAllCreditNotes`
+  - `getCreditNoteById`
+  - `updateCreditNote`
+  - `deleteCreditNote`
+- ✅ Added `src/validators/creditNote.validator.js`:
+  - `validateCreateCreditNote`
+  - `validateUpdateCreditNote`
+  - `validateAppplyCreditNote`
+- ✅ Refactored `src/modules/creditNotes/controller.js` to delegate to service layer and fixed API response compatibility (`ApiResponse.error(..., 400)` instead of non-existent `badRequest`).
+- ✅ Updated `src/modules/creditNotes/routes.js` to include validators and apply endpoint.
+- ✅ Updated `tests/__tests__/creditNotes/controller.test.js` to service-layer mock pattern.
+
+### Verified Test Status
+- ✅ `tests/__tests__/creditNotes/controller.test.js`: **13/13 passing**
+- ⚠️ `tests/__tests__/creditNotes/service.test.js`: **3 failing** (mock alignment issues)
+
+### Current Branch / Commit
+- Branch used: `feature/credit-notes-module`
+- Backend implementation commit recorded in branch history.
+
+### Next Step (Immediate Handoff)
+1. Fix `tests/__tests__/creditNotes/service.test.js` mock contracts to match model instance methods used by service (`toJSON`, instance `update`, invoice/customer preconditions).
+2. Re-run: `npm test -- --testPathPatterns="creditNotes" --no-coverage` until all credit-notes tests pass.
+3. Complete React Credit Notes page behavior in `frontend/src/pages/CreditNotes.jsx`:
+   - Create credit note flow
+   - Apply credit flow
+   - Delete draft-only flow
+   - Status filtering + pagination behavior against current backend response shape
+4. Run frontend build/tests and then open PR from `feature/credit-notes-module`.
+
+---
+
 ## 📊 EXECUTIVE SUMMARY
 
 ### Overall Assessment: ⭐⭐⭐⭐ (4/5) - PRODUCTION READY with Minor Improvements
